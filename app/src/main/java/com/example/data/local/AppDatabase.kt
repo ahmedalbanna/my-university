@@ -7,9 +7,10 @@ import androidx.room.RoomDatabase
 import com.example.data.local.dao.AppDao
 import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.PaymentEntity
+import com.example.data.local.entities.PreferenceEntity
 
 @Database(
-    entities = [FavoriteEntity::class, PaymentEntity::class],
+    entities = [FavoriteEntity::class, PaymentEntity::class, PreferenceEntity::class],
     version = 1,
     exportSchema = false
 )

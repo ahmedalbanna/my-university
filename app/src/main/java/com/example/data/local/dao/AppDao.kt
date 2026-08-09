@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.PaymentEntity
+import com.example.data.local.entities.PreferenceEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -30,4 +31,11 @@ interface AppDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPayment(payment: PaymentEntity)
+
+    // Preferences
+    @Query("SELECT value FROM preferences WHERE `key` = :key")
+    suspend fun getPreference(key: String): String?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPreference(preference: PreferenceEntity)
 }

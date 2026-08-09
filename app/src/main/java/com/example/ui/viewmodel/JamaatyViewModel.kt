@@ -35,6 +35,11 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         val dao = AppDatabase.getDatabase(application).appDao()
         repository = JamaatyRepository(dao)
 
+        // Load onboarding state
+        viewModelScope.launch {
+            _onboardingCompleted.value = repository.isOnboardingCompleted()
+        }
+
         // Seed initial sample payment if empty
         viewModelScope.launch {
             repository.addPayment(
@@ -68,6 +73,9 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
 
     fun completeOnboarding() {
         _onboardingCompleted.value = true
+        viewModelScope.launch {
+            repository.setOnboardingCompleted(true)
+        }
     }
 
     // Student Profile

@@ -3,6 +3,7 @@ package com.example.data.repository
 import com.example.data.local.dao.AppDao
 import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.PaymentEntity
+import com.example.data.local.entities.PreferenceEntity
 import com.example.data.model.Book
 import com.example.data.model.ExamResult
 import com.example.data.model.Project
@@ -17,6 +18,14 @@ class JamaatyRepository(private val appDao: AppDao) {
 
     val favorites: Flow<List<FavoriteEntity>> = appDao.getAllFavorites()
     val payments: Flow<List<PaymentEntity>> = appDao.getAllPayments()
+
+    suspend fun isOnboardingCompleted(): Boolean {
+        return appDao.getPreference("onboarding_completed") == "true"
+    }
+
+    suspend fun setOnboardingCompleted(completed: Boolean) {
+        appDao.insertPreference(PreferenceEntity("onboarding_completed", completed.toString()))
+    }
 
     fun isFavorite(id: String): Flow<Boolean> = appDao.isFavorite(id)
 
