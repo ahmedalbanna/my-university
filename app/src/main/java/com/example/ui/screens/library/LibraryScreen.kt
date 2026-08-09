@@ -1,6 +1,7 @@
 package com.example.ui.screens.library
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,10 +55,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.Book
 import com.example.data.model.Project
 
@@ -248,19 +252,27 @@ fun LibraryScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
+                            .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.MenuBook,
+                            Image(
+                                painter = painterResource(id = R.drawable.library_empty_state_1786312083136),
                                 contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.outline
+                                modifier = Modifier
+                                    .size(200.dp)
+                                    .clip(RoundedCornerShape(24.dp)),
+                                contentScale = ContentScale.Fit
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "لا توجد كتب مطابقة للفلاتر الحالية",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "حاول تغيير المستوى أو الكلية أو كلمة البحث",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

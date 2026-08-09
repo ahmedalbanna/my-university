@@ -1,5 +1,6 @@
 package com.example.ui.screens.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,10 +46,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.Book
 import com.example.data.model.StudentProfile
 import com.example.ui.components.DigitalStudentCard
@@ -73,6 +77,16 @@ fun HomeScreen(
             .padding(bottom = 24.dp)
             .testTag("home_screen_root")
     ) {
+        // Hero Banner Image
+        Image(
+            painter = painterResource(id = R.drawable.home_hero_banner_1786312069086),
+            contentDescription = "جامعتي",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp),
+            contentScale = ContentScale.Crop
+        )
+
         // Welcoming Hero Header
         Box(
             modifier = Modifier
