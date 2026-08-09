@@ -1,0 +1,6 @@
+{
+  "name": "جامعتي",
+  "description": "تطبيق جامعي شامل للطلاب: المستوى الدراسي، الكتب والأبحاث، نماذج الاختبارات، المحفظة والرسوم، والترجمة الأكاديمية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
