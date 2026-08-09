@@ -31,6 +31,7 @@ import com.example.ui.components.JamaatyTopBar
 import com.example.ui.navigation.DeepLinkParser
 import com.example.ui.navigation.DeepLinkResult
 import com.example.ui.screens.exams.ExamsScreen
+import com.example.ui.screens.gpa.GpaCalculatorScreen
 import com.example.ui.screens.home.HomeScreen
 import com.example.ui.screens.library.LibraryScreen
 import com.example.ui.screens.more.TranslateMoreScreen
@@ -50,6 +51,7 @@ fun JamaatyApp(
     var showAiChatSheet by remember { mutableStateOf(false) }
     var showDeepLinkDialog by remember { mutableStateOf(false) }
     var showNotifications by remember { mutableStateOf(false) }
+    var showGpaCalculator by remember { mutableStateOf(false) }
 
     // Observe ViewModel state
     val profile by viewModel.studentProfile.collectAsState()
@@ -117,11 +119,12 @@ fun JamaatyApp(
     }
 
     // System Back Handler Refinement
-    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || currentTab != BottomTab.Home) {
+    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || currentTab != BottomTab.Home) {
         when {
             showAiChatSheet -> showAiChatSheet = false
             showDeepLinkDialog -> showDeepLinkDialog = false
             showNotifications -> showNotifications = false
+            showGpaCalculator -> showGpaCalculator = false
             currentTab != BottomTab.Home -> currentTab = BottomTab.Home
         }
     }
@@ -252,7 +255,8 @@ fun JamaatyApp(
                                 onTranslateInput = { text -> viewModel.translateText(text) },
                                 onToggleFavorite = { id, type, title, sub, fac ->
                                     viewModel.toggleFavorite(id, type, title, sub, fac)
-                                }
+                                },
+                                onOpenGpaCalculator = { showGpaCalculator = true }
                             )
                         }
                     }
@@ -287,6 +291,17 @@ fun JamaatyApp(
             NotificationScreen(
                 viewModel = viewModel,
                 onBack = { showNotifications = false }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showGpaCalculator,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            GpaCalculatorScreen(
+                viewModel = viewModel,
+                onBack = { showGpaCalculator = false }
             )
         }
     }

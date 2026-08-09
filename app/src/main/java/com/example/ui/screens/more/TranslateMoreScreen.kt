@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Grade
 import androidx.compose.material.icons.filled.Language
@@ -69,7 +70,8 @@ fun TranslateMoreScreen(
     examResults: List<ExamResult>,
     favorites: List<FavoriteEntity>,
     onTranslateInput: (String) -> Unit,
-    onToggleFavorite: (String, String, String, String, String) -> Unit
+    onToggleFavorite: (String, String, String, String, String) -> Unit,
+    onOpenGpaCalculator: () -> Unit
 ) {
     var activeSubTab by remember { mutableStateOf(0) } // 0: المترجم الأكاديمي, 1: المفضلة, 2: نتائج الامتحانات, 3: مكتبات عالمية
 
@@ -252,6 +254,18 @@ fun TranslateMoreScreen(
                             ) {
                                 Text(text = "سجل نتائج الامتحانات للفصل الحالي", fontWeight = FontWeight.Bold)
                                 Text(text = "المعدل التراكمي الفصل: 3.84 / 4.0 (ممتاز مرتفع)", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Button(
+                                    onClick = onOpenGpaCalculator,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Calculate, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("افتح حاسبة المعدل التراكمي التفصيلية")
+                                }
                             }
                         }
                     }

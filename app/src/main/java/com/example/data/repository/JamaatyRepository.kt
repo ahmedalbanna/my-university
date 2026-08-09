@@ -5,6 +5,8 @@ import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.NotificationEntity
 import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.PreferenceEntity
+import com.example.data.local.entities.SemesterEntity
+import com.example.data.local.entities.CourseEntity
 import com.example.data.model.Book
 import com.example.data.model.ExamResult
 import com.example.data.model.Project
@@ -36,6 +38,28 @@ class JamaatyRepository(private val appDao: AppDao) {
 
     suspend fun deleteNotification(notification: NotificationEntity) {
         appDao.deleteNotification(notification)
+    }
+
+    // Academic / GPA
+    val semesters: Flow<List<SemesterEntity>> = appDao.getAllSemesters()
+
+    fun getCoursesForSemester(semesterId: String): Flow<List<CourseEntity>> = appDao.getCoursesForSemester(semesterId)
+
+    suspend fun addSemester(semester: SemesterEntity) {
+        appDao.insertSemester(semester)
+    }
+
+    suspend fun addCourse(course: CourseEntity) {
+        appDao.insertCourse(course)
+    }
+
+    suspend fun deleteSemester(semester: SemesterEntity) {
+        appDao.deleteCoursesForSemester(semester.id)
+        appDao.deleteSemester(semester)
+    }
+
+    suspend fun deleteCourse(course: CourseEntity) {
+        appDao.deleteCourse(course)
     }
 
     suspend fun isOnboardingCompleted(): Boolean {

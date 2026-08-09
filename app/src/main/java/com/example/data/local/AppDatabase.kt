@@ -9,10 +9,19 @@ import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.NotificationEntity
 import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.PreferenceEntity
+import com.example.data.local.entities.SemesterEntity
+import com.example.data.local.entities.CourseEntity
 
 @Database(
-    entities = [FavoriteEntity::class, PaymentEntity::class, PreferenceEntity::class, NotificationEntity::class],
-    version = 1,
+    entities = [
+        FavoriteEntity::class, 
+        PaymentEntity::class, 
+        PreferenceEntity::class, 
+        NotificationEntity::class,
+        SemesterEntity::class,
+        CourseEntity::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

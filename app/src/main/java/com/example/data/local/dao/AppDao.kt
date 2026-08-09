@@ -9,6 +9,8 @@ import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.NotificationEntity
 import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.PreferenceEntity
+import com.example.data.local.entities.SemesterEntity
+import com.example.data.local.entities.CourseEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -39,6 +41,28 @@ interface AppDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPreference(preference: PreferenceEntity)
+
+    // Academic / GPA
+    @Query("SELECT * FROM semesters")
+    fun getAllSemesters(): Flow<List<SemesterEntity>>
+
+    @Query("SELECT * FROM courses WHERE semesterId = :semesterId")
+    fun getCoursesForSemester(semesterId: String): Flow<List<CourseEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSemester(semester: SemesterEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCourse(course: CourseEntity)
+
+    @Delete
+    suspend fun deleteSemester(semester: SemesterEntity)
+
+    @Delete
+    suspend fun deleteCourse(course: CourseEntity)
+
+    @Query("DELETE FROM courses WHERE semesterId = :semesterId")
+    suspend fun deleteCoursesForSemester(semesterId: String)
 
     // Notifications
     @Query("SELECT * FROM notifications ORDER BY timestamp DESC")

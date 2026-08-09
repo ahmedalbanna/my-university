@@ -7,6 +7,8 @@ import com.example.data.local.AppDatabase
 import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.NotificationEntity
 import com.example.data.local.entities.PaymentEntity
+import com.example.data.local.entities.SemesterEntity
+import com.example.data.local.entities.CourseEntity
 import com.example.data.model.Book
 import com.example.data.model.ExamResult
 import com.example.data.model.Project
@@ -15,6 +17,7 @@ import com.example.data.model.StudentProfile
 import com.example.data.model.VocabularyCard
 import com.example.data.model.WorldLibrary
 import com.example.data.repository.JamaatyRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,12 +33,13 @@ data class ChatMessage(
 
 class JamaatyViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository: JamaatyRepository
+    private val repository = JamaatyRepository(AppDatabase.getDatabase(application).appDao())
+
+    // Onboarding State
+    private val _onboardingCompleted = MutableStateFlow(false)
+    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
 
     init {
-        val dao = AppDatabase.getDatabase(application).appDao()
-        repository = JamaatyRepository(dao)
-
         // Load onboarding state
         viewModelScope.launch {
             _onboardingCompleted.value = repository.isOnboardingCompleted()
@@ -101,10 +105,6 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
-
-    // Onboarding State
-    private val _onboardingCompleted = MutableStateFlow(false)
-    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
 
     fun completeOnboarding() {
         _onboardingCompleted.value = true
@@ -192,6 +192,50 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
 
     val unreadNotificationsCount: StateFlow<Int> = repository.unreadNotificationsCount
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+    
+    // Academic / GPA
+    val semesters: StateFlow<List<SemesterEntity>> = repository.semesters
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun getCoursesForSemester(semesterId: String): Flow<List<CourseEntity>> = repository.getCoursesForSemester(semesterId)
+
+    fun addSemester(name: String, year: String) {
+        viewModelScope.launch {
+            repository.addSemester(SemesterEntity(name = name, academicYear = year))
+        }
+    }
+
+    fun addCourse(semesterId: String, name: String, creditHours: Int, grade: Double) {
+        viewModelScope.launch {
+            repository.addCourse(CourseEntity(semesterId = semesterId, name = name, creditHours = creditHours, grade = grade))
+        }
+    }
+
+    fun deleteSemester(semester: SemesterEntity) {
+        viewModelScope.launch {
+            repository.deleteSemester(semester)
+        }
+    }
+
+    fun deleteCourse(course: CourseEntity) {
+        viewModelScope.launch {
+            repository.deleteCourse(course)
+        }
+    }
+
+    // GPA Calculation logic
+    fun calculateGpa(courses: List<CourseEntity>): Double {
+        if (courses.isEmpty()) return 0.0
+        val totalPoints = courses.sumOf { it.grade * it.creditHours }
+        val totalCredits = courses.sumOf { it.creditHours }
+        if (totalCredits == 0) return 0.0
+        return totalPoints / totalCredits
+    }
+
+    fun calculateCumulativeGpa(semestersWithCourses: Map<String, List<CourseEntity>>): Double {
+        val allCourses = semestersWithCourses.values.flatten()
+        return calculateGpa(allCourses)
+    }
 
     // Data lists getters
     fun getFaculties() = repository.getFaculties()
