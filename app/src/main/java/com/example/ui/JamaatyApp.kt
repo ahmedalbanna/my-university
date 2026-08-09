@@ -1,5 +1,7 @@
 package com.example.ui
 
+import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,8 +22,11 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.components.AiChatDialog
 import com.example.ui.components.BottomTab
+import com.example.ui.components.DeepLinkDialog
 import com.example.ui.components.JamaatyBottomBar
 import com.example.ui.components.JamaatyTopBar
+import com.example.ui.navigation.DeepLinkParser
+import com.example.ui.navigation.DeepLinkResult
 import com.example.ui.screens.exams.ExamsScreen
 import com.example.ui.screens.home.HomeScreen
 import com.example.ui.screens.library.LibraryScreen
@@ -30,10 +36,13 @@ import com.example.ui.viewmodel.JamaatyViewModel
 
 @Composable
 fun JamaatyApp(
+    initialDeepLinkUri: Uri? = null,
+    onDeepLinkHandled: () -> Unit = {},
     viewModel: JamaatyViewModel = viewModel()
 ) {
     var currentTab by remember { mutableStateOf<BottomTab>(BottomTab.Home) }
     var showAiChatSheet by remember { mutableStateOf(false) }
+    var showDeepLinkDialog by remember { mutableStateOf(false) }
 
     // Observe ViewModel state
     val profile by viewModel.studentProfile.collectAsState()
@@ -60,6 +69,70 @@ fun JamaatyApp(
     val payments by viewModel.payments.collectAsState()
     val chatMessages by viewModel.chatMessages.collectAsState()
 
+    // Deep Link Application Function
+    val applyDeepLink: (Uri) -> Unit = remember(viewModel) {
+        { uri ->
+            when (val result = DeepLinkParser.parse(uri)) {
+                is DeepLinkResult.NavigateTab -> {
+                    BottomTab.list.find { it.route == result.tabRoute }?.let { targetTab ->
+                        currentTab = targetTab
+                    }
+
+                    result.level?.let { viewModel.setLevel(it) }
+                    result.semester?.let { viewModel.setSemester(it) }
+                    result.faculty?.let { viewModel.setFaculty(it) }
+
+                    if (result.tabRoute == "library") {
+                        result.searchQuery?.let { viewModel.setBookSearchQuery(it) }
+                    } else if (result.tabRoute == "exams") {
+                        result.searchQuery?.let { viewModel.setQuestionSearchQuery(it) }
+                    }
+
+                    result.difficulty?.let { viewModel.setDifficulty(it) }
+                    result.tag?.let { viewModel.setQuestionTag(it) }
+
+                    if (result.openChat) {
+                        showAiChatSheet = true
+                    }
+                }
+                DeepLinkResult.Invalid -> { /* ignore invalid link */ }
+            }
+        }
+    }
+
+    // Process initial or incoming deep link URI
+    LaunchedEffect(initialDeepLinkUri) {
+        initialDeepLinkUri?.let { uri ->
+            applyDeepLink(uri)
+            onDeepLinkHandled()
+        }
+    }
+
+    // System Back Handler Refinement
+    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || currentTab != BottomTab.Home) {
+        when {
+            showAiChatSheet -> showAiChatSheet = false
+            showDeepLinkDialog -> showDeepLinkDialog = false
+            currentTab != BottomTab.Home -> currentTab = BottomTab.Home
+        }
+    }
+
+    // Build current active screen's deep link for sharing/copying
+    val currentDeepLink = remember(
+        currentTab, selectedLevel, selectedSemester, selectedFaculty,
+        bookQuery, questionQuery, difficulty, questionTag
+    ) {
+        DeepLinkParser.buildLink(
+            route = currentTab.route,
+            level = if (currentTab == BottomTab.Library) selectedLevel else null,
+            semester = if (currentTab == BottomTab.Library) selectedSemester else null,
+            faculty = if (currentTab == BottomTab.Library) selectedFaculty else null,
+            searchQuery = if (currentTab == BottomTab.Library) bookQuery else if (currentTab == BottomTab.Exams) questionQuery else null,
+            difficulty = if (currentTab == BottomTab.Exams) difficulty else null,
+            tag = if (currentTab == BottomTab.Exams) questionTag else null
+        )
+    }
+
     // Force RTL for Arabic layout
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Scaffold(
@@ -69,7 +142,8 @@ fun JamaatyApp(
                     studentName = profile.name,
                     favoritesCount = favorites.size,
                     onOpenAiChat = { showAiChatSheet = true },
-                    onOpenFavorites = { currentTab = BottomTab.TranslateMore }
+                    onOpenFavorites = { currentTab = BottomTab.TranslateMore },
+                    onOpenDeepLinkTester = { showDeepLinkDialog = true }
                 )
             },
             bottomBar = {
@@ -178,6 +252,16 @@ fun JamaatyApp(
                 messages = chatMessages,
                 onSendMessage = { text -> viewModel.sendChatMessage(text) },
                 onDismiss = { showAiChatSheet = false }
+            )
+        }
+
+        // Deep Link Dialog & Tester
+        if (showDeepLinkDialog) {
+            DeepLinkDialog(
+                currentRoute = currentTab.route,
+                currentLink = currentDeepLink,
+                onExecuteDeepLink = applyDeepLink,
+                onDismiss = { showDeepLinkDialog = false }
             )
         }
     }

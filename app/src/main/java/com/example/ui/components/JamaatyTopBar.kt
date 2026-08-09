@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -43,6 +44,7 @@ fun JamaatyTopBar(
     favoritesCount: Int,
     onOpenAiChat: () -> Unit,
     onOpenFavorites: () -> Unit,
+    onOpenDeepLinkTester: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -117,8 +119,20 @@ fun JamaatyTopBar(
                 }
             }
 
-            // Left: Actions (AI Helper & Favorites)
+            // Left: Actions (DeepLink, Favorites & AI Helper)
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // Deep Link Tester Button
+                IconButton(
+                    onClick = onOpenDeepLinkTester,
+                    modifier = Modifier.testTag("top_bar_deep_link_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Link,
+                        contentDescription = "رابط عميق",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 // Favorites Badge Button
                 IconButton(
                     onClick = onOpenFavorites,
