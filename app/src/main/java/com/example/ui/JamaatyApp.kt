@@ -31,6 +31,7 @@ import com.example.ui.screens.exams.ExamsScreen
 import com.example.ui.screens.home.HomeScreen
 import com.example.ui.screens.library.LibraryScreen
 import com.example.ui.screens.more.TranslateMoreScreen
+import com.example.ui.screens.onboarding.OnboardingScreen
 import com.example.ui.screens.wallet.WalletScreen
 import com.example.ui.viewmodel.JamaatyViewModel
 
@@ -40,6 +41,7 @@ fun JamaatyApp(
     onDeepLinkHandled: () -> Unit = {},
     viewModel: JamaatyViewModel = viewModel()
 ) {
+    val onboardingCompleted by viewModel.onboardingCompleted.collectAsState()
     var currentTab by remember { mutableStateOf<BottomTab>(BottomTab.Home) }
     var showAiChatSheet by remember { mutableStateOf(false) }
     var showDeepLinkDialog by remember { mutableStateOf(false) }
@@ -135,8 +137,11 @@ fun JamaatyApp(
 
     // Force RTL for Arabic layout
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Scaffold(
-            topBar = {
+        if (!onboardingCompleted) {
+            OnboardingScreen(onFinished = { viewModel.completeOnboarding() })
+        } else {
+            Scaffold(
+                topBar = {
                 JamaatyTopBar(
                     selectedLevel = selectedLevel,
                     studentName = profile.name,
@@ -265,4 +270,5 @@ fun JamaatyApp(
             )
         }
     }
+}
 }

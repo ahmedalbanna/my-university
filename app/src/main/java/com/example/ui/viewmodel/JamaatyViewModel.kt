@@ -62,6 +62,14 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // Onboarding State
+    private val _onboardingCompleted = MutableStateFlow(false)
+    val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
+
+    fun completeOnboarding() {
+        _onboardingCompleted.value = true
+    }
+
     // Student Profile
     private val _studentProfile = MutableStateFlow(repository.getStudentProfile())
     val studentProfile: StateFlow<StudentProfile> = _studentProfile.asStateFlow()
