@@ -2,6 +2,7 @@ package com.example.data.repository
 
 import com.example.data.local.dao.AppDao
 import com.example.data.local.entities.FavoriteEntity
+import com.example.data.local.entities.NotificationEntity
 import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.PreferenceEntity
 import com.example.data.model.Book
@@ -18,6 +19,24 @@ class JamaatyRepository(private val appDao: AppDao) {
 
     val favorites: Flow<List<FavoriteEntity>> = appDao.getAllFavorites()
     val payments: Flow<List<PaymentEntity>> = appDao.getAllPayments()
+    val notifications: Flow<List<NotificationEntity>> = appDao.getAllNotifications()
+    val unreadNotificationsCount: Flow<Int> = appDao.getUnreadNotificationsCount()
+
+    suspend fun addNotification(notification: NotificationEntity) {
+        appDao.insertNotification(notification)
+    }
+
+    suspend fun markNotificationAsRead(id: String) {
+        appDao.markAsRead(id)
+    }
+
+    suspend fun markAllNotificationsAsRead() {
+        appDao.markAllAsRead()
+    }
+
+    suspend fun deleteNotification(notification: NotificationEntity) {
+        appDao.deleteNotification(notification)
+    }
 
     suspend fun isOnboardingCompleted(): Boolean {
         return appDao.getPreference("onboarding_completed") == "true"

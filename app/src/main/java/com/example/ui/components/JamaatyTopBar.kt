@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -42,8 +43,10 @@ fun JamaatyTopBar(
     selectedLevel: Int,
     studentName: String,
     favoritesCount: Int,
+    unreadNotificationsCount: Int,
     onOpenAiChat: () -> Unit,
     onOpenFavorites: () -> Unit,
+    onOpenNotifications: () -> Unit,
     onOpenDeepLinkTester: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -131,6 +134,31 @@ fun JamaatyTopBar(
                         contentDescription = "رابط عميق",
                         tint = MaterialTheme.colorScheme.primary
                     )
+                }
+
+                // Notifications Badge Button
+                IconButton(
+                    onClick = onOpenNotifications,
+                    modifier = Modifier.testTag("top_bar_notifications_button")
+                ) {
+                    BadgedBox(
+                        badge = {
+                            if (unreadNotificationsCount > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                ) {
+                                    Text(text = "$unreadNotificationsCount")
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "التنبيهات",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 // Favorites Badge Button

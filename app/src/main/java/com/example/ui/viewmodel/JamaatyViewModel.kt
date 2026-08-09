@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
 import com.example.data.local.entities.FavoriteEntity
+import com.example.data.local.entities.NotificationEntity
 import com.example.data.local.entities.PaymentEntity
 import com.example.data.model.Book
 import com.example.data.model.ExamResult
@@ -64,6 +65,40 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                     paymentMethod = "المحفظة الرقمية"
                 )
             )
+        }
+
+        // Seed notifications if empty
+        viewModelScope.launch {
+            val current = repository.notifications.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList()).value
+            if (current.isEmpty()) {
+                repository.addNotification(
+                    NotificationEntity(
+                        id = "notif_1",
+                        title = "موعد اختبار قادم",
+                        message = "اختبار مادة القانون الإداري غداً الساعة 10:00 صباحاً في القاعة 402.",
+                        timestamp = System.currentTimeMillis() - 3600000,
+                        type = "EXAM"
+                    )
+                )
+                repository.addNotification(
+                    NotificationEntity(
+                        id = "notif_2",
+                        title = "تنبيه سداد رسوم",
+                        message = "تبقي 3 أيام على الموعد النهائي لسداد رسوم الفصل الدراسي الثاني لتجنب الغرامة.",
+                        timestamp = System.currentTimeMillis() - 86400000,
+                        type = "FEE"
+                    )
+                )
+                repository.addNotification(
+                    NotificationEntity(
+                        id = "notif_3",
+                        title = "رفع كتب جديدة",
+                        message = "تمت إضافة 5 مراجع جديدة في قسم الدراسات الإسلامية بالمكتبة.",
+                        timestamp = System.currentTimeMillis() - 172800000,
+                        type = "LIBRARY"
+                    )
+                )
+            }
         }
     }
 
@@ -151,6 +186,12 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         SharingStarted.WhileSubscribed(5000),
         emptyList()
     )
+
+    val notifications: StateFlow<List<NotificationEntity>> = repository.notifications
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val unreadNotificationsCount: StateFlow<Int> = repository.unreadNotificationsCount
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     // Data lists getters
     fun getFaculties() = repository.getFaculties()
@@ -298,6 +339,25 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             kotlinx.coroutines.delay(600) // Simulate fast AI processing
             _translationOutputText.value = simulateAcademicTranslation(input)
             _isTranslating.value = false
+        }
+    }
+
+    // Notification Actions
+    fun markNotificationAsRead(id: String) {
+        viewModelScope.launch {
+            repository.markNotificationAsRead(id)
+        }
+    }
+
+    fun markAllNotificationsAsRead() {
+        viewModelScope.launch {
+            repository.markAllNotificationsAsRead()
+        }
+    }
+
+    fun deleteNotification(notification: NotificationEntity) {
+        viewModelScope.launch {
+            repository.deleteNotification(notification)
         }
     }
 

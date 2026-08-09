@@ -2,7 +2,10 @@ package com.example.ui
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,6 +34,7 @@ import com.example.ui.screens.exams.ExamsScreen
 import com.example.ui.screens.home.HomeScreen
 import com.example.ui.screens.library.LibraryScreen
 import com.example.ui.screens.more.TranslateMoreScreen
+import com.example.ui.screens.notifications.NotificationScreen
 import com.example.ui.screens.onboarding.OnboardingScreen
 import com.example.ui.screens.wallet.WalletScreen
 import com.example.ui.viewmodel.JamaatyViewModel
@@ -45,6 +49,7 @@ fun JamaatyApp(
     var currentTab by remember { mutableStateOf<BottomTab>(BottomTab.Home) }
     var showAiChatSheet by remember { mutableStateOf(false) }
     var showDeepLinkDialog by remember { mutableStateOf(false) }
+    var showNotifications by remember { mutableStateOf(false) }
 
     // Observe ViewModel state
     val profile by viewModel.studentProfile.collectAsState()
@@ -69,6 +74,7 @@ fun JamaatyApp(
 
     val favorites by viewModel.favorites.collectAsState()
     val payments by viewModel.payments.collectAsState()
+    val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsState()
     val chatMessages by viewModel.chatMessages.collectAsState()
 
     // Deep Link Application Function
@@ -111,10 +117,11 @@ fun JamaatyApp(
     }
 
     // System Back Handler Refinement
-    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || currentTab != BottomTab.Home) {
+    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || currentTab != BottomTab.Home) {
         when {
             showAiChatSheet -> showAiChatSheet = false
             showDeepLinkDialog -> showDeepLinkDialog = false
+            showNotifications -> showNotifications = false
             currentTab != BottomTab.Home -> currentTab = BottomTab.Home
         }
     }
@@ -146,8 +153,10 @@ fun JamaatyApp(
                     selectedLevel = selectedLevel,
                     studentName = profile.name,
                     favoritesCount = favorites.size,
+                    unreadNotificationsCount = unreadNotificationsCount,
                     onOpenAiChat = { showAiChatSheet = true },
                     onOpenFavorites = { currentTab = BottomTab.TranslateMore },
+                    onOpenNotifications = { showNotifications = true },
                     onOpenDeepLinkTester = { showDeepLinkDialog = true }
                 )
             },
@@ -267,6 +276,17 @@ fun JamaatyApp(
                 currentLink = currentDeepLink,
                 onExecuteDeepLink = applyDeepLink,
                 onDismiss = { showDeepLinkDialog = false }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showNotifications,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            NotificationScreen(
+                viewModel = viewModel,
+                onBack = { showNotifications = false }
             )
         }
     }
