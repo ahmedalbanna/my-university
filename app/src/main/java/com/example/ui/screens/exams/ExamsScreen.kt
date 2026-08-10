@@ -1,19 +1,12 @@
 package com.example.ui.screens.exams
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -21,44 +14,23 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assignment
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.Question
 import com.example.data.model.QuestionVersion
 
@@ -79,7 +51,7 @@ fun ExamsScreen(
     onResetQuiz: () -> Unit
 ) {
     var selectedQuestionForHistory by remember { mutableStateOf<Question?>(null) }
-    var practiceMode by remember { mutableStateOf(false) } // Browse vs Interactive Exam Practice
+    var activeSubTab by remember { mutableIntStateOf(0) } // 0: تصفح بنك الأسئلة, 1: الاختبار التفاعلي
 
     Column(
         modifier = Modifier
@@ -87,119 +59,95 @@ fun ExamsScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag("exams_screen_root")
     ) {
-        // Top Header Banner
-        Box(
+        // Hero Header Banner
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(16.dp)
+                .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 8.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
         ) {
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column {
-                        Text(
-                            text = "📝 منصة نماذج الاختبارات وبنك الأسئلة",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "تمارين تفاعلية وسجل مراجعة تاريخ الإصدارات",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Mode Switch Button
-                    Surface(
-                        onClick = { practiceMode = !practiceMode },
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (practiceMode) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (practiceMode) Icons.Default.Refresh else Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = if (practiceMode) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (practiceMode) "تصفح الأسئلة" else "بدء اختبار تفاعلي",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (practiceMode) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Assignment,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-                // Search Bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = onSearchChange,
-                    placeholder = { Text("بحث عن سؤال، موضوع أكاديمي، أو كلمة رئيسية...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("question_search_field"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "منصة الاختبارات وبنك الأسئلة 📝",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "${questions.size} سؤال إلكتروني • سجل مراجعات وتدريب تفاعلي",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        // SubTab Navigation Bar (Mode Switcher)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val tabs = listOf(
+                    0 to "📚 تصفح بنك الأسئلة",
+                    1 to "🎯 اختبار تفاعلي"
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Difficulty Filter Chips
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "مستوى الصعوبة: ",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(listOf("الكل", "سهل", "متوسط", "صعب")) { diff ->
-                            FilterChip(
-                                selected = (selectedDifficulty == diff),
-                                onClick = { onDifficultyChange(diff) },
-                                label = { Text(diff, fontSize = 11.sp) }
-                            )
-                        }
-                    }
-                }
-
-                // Tags Filter Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "الوسوم: ",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(listOf("الكل", "#خوارزميات", "#OOP", "#فيزياء", "#طب", "#SQL")) { tag ->
-                            FilterChip(
-                                selected = (selectedTag == tag),
-                                onClick = { onTagChange(tag) },
-                                label = { Text(tag, fontSize = 10.sp) }
+                tabs.forEach { (index, title) ->
+                    val isSelected = activeSubTab == index
+                    Surface(
+                        onClick = { activeSubTab = index },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = title,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -207,93 +155,308 @@ fun ExamsScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // Filters Section: Search + Difficulty + Tags
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                // Search Input
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchChange,
+                    placeholder = { Text("بحث عن سؤال، موضوع، أو وسم...", fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                    trailingIcon = if (searchQuery.isNotEmpty()) {
+                        {
+                            IconButton(onClick = { onSearchChange("") }) {
+                                Icon(Icons.Default.Close, contentDescription = "مسح", modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    } else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("question_search_field"),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp)
+                )
 
-        if (practiceMode) {
-            // INTERACTIVE QUIZ MODE
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                // Score Summary Banner
-                if (quizSubmitted) {
-                    val scoreCount = questions.indices.count { idx ->
-                        selectedAnswers[idx] == questions[idx].correctIndex
-                    }
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "🎉 نتيجة الاختبار التفاعلي", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "حصلت على $scoreCount من أصل ${questions.size} إجابات صحيحة",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = onResetQuiz) {
-                                Text("إعادة المحاولة")
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Difficulty Filter Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "الصعوبة:",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(listOf("الكل", "سهل", "متوسط", "صعب")) { diff ->
+                            val isSelected = (selectedDifficulty == diff)
+                            Surface(
+                                onClick = { onDifficultyChange(diff) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                border = if (isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+                            ) {
+                                Text(
+                                    text = diff,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
                 }
-
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    itemsIndexed(questions) { qIndex, question ->
-                        QuizQuestionCard(
-                            questionIndex = qIndex,
-                            question = question,
-                            selectedOption = selectedAnswers[qIndex],
-                            showResult = quizSubmitted,
-                            onOptionSelected = { optionIdx -> onAnswerSelected(qIndex, optionIdx) }
-                        )
-                    }
-                }
-
-                if (!quizSubmitted && questions.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = onSubmitQuiz,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("submit_quiz_button"),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("إنهاء وتصحيح الاختبار", fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        } else {
-            // QUESTION BANK BROWSE & VERSION HISTORY
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "بنك الأسئلة المتاح (${questions.size} سؤال):",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // Tags Filter Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(questions) { q ->
-                        QuestionBrowseCard(
-                            question = q,
-                            onViewHistory = { selectedQuestionForHistory = q }
-                        )
+                    Text(
+                        text = "الوسم:",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(listOf("الكل", "#خوارزميات", "#OOP", "#فيزياء", "#طب", "#SQL")) { tag ->
+                            val isSelected = (selectedTag == tag)
+                            Surface(
+                                onClick = { onTagChange(tag) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                border = if (isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.secondary) else null
+                            ) {
+                                Text(
+                                    text = tag,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        if (questions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = painterResource(id = R.drawable.onboarding_exams_1786313467712),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(140.dp)
+                            .clip(RoundedCornerShape(20.dp)),
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "لا توجد أسئلة مطابقة للبحث",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "حاول مسح كلمة البحث أو تغيير فلتر الصعوبة والوسوم",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            if (activeSubTab == 1) {
+                // INTERACTIVE QUIZ MODE
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                ) {
+                    val answeredCount = selectedAnswers.size
+                    val progressFraction = if (questions.isNotEmpty()) answeredCount.toFloat() / questions.size else 0f
+
+                    // Quiz Progress Indicator Card
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Quiz,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "تقدم الاختبار التفاعلي",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Text(
+                                    text = "$answeredCount من ${questions.size} إجابة",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LinearProgressIndicator(
+                                progress = { progressFraction },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        }
+                    }
+
+                    // Score Summary Banner (Shown After Submission)
+                    if (quizSubmitted) {
+                        val scoreCount = questions.indices.count { idx ->
+                            selectedAnswers[idx] == questions[idx].correctIndex
+                        }
+                        val scorePercentage = if (questions.isNotEmpty()) (scoreCount * 100) / questions.size else 0
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (scorePercentage >= 50) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = if (scorePercentage >= 80) "🎉 ممتاز! أداء أكاديمي رائع" else if (scorePercentage >= 50) "👍 جيد جداً، استمر في المراجعة" else "💪 تحتاج لمزيد من التدريب والمراجعة",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "$scoreCount / ${questions.size} إجابة صحيحة ($scorePercentage%)",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Button(
+                                    onClick = onResetQuiz,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                ) {
+                                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("إعادة إجراء الاختبار", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        itemsIndexed(questions) { qIndex, question ->
+                            QuizQuestionCard(
+                                questionIndex = qIndex,
+                                question = question,
+                                selectedOption = selectedAnswers[qIndex],
+                                showResult = quizSubmitted,
+                                onOptionSelected = { optionIdx -> onAnswerSelected(qIndex, optionIdx) }
+                            )
+                        }
+                    }
+
+                    if (!quizSubmitted && questions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Button(
+                            onClick = onSubmitQuiz,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("submit_quiz_button"),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(vertical = 12.dp)
+                        ) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("إنهاء وتصحيح الاختبار الآن", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                    }
+                }
+            } else {
+                // QUESTION BANK BROWSE & VERSION HISTORY
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "قائمة بنك الأسئلة المتاحة (${questions.size} سؤال):",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(questions) { q ->
+                            QuestionBrowseCard(
+                                question = q,
+                                onViewHistory = { selectedQuestionForHistory = q }
+                            )
+                        }
                     }
                 }
             }
@@ -321,71 +484,107 @@ fun QuizQuestionCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Card Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "السؤال ${questionIndex + 1} • ${question.subject}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(
-                            when (question.difficulty) {
-                                "سهل" -> Color(0xFF4CAF50).copy(alpha = 0.15f)
-                                "متوسط" -> Color(0xFFFF9800).copy(alpha = 0.15f)
-                                else -> Color(0xFFF44336).copy(alpha = 0.15f)
-                            }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "السؤال ${questionIndex + 1}",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold
                         )
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${question.faculty} • ${question.subject}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Difficulty Pill
+                val diffBg = when (question.difficulty) {
+                    "سهل" -> Color(0xFFE8F5E9)
+                    "متوسط" -> Color(0xFFFFF3E0)
+                    else -> Color(0xFFFFEBEE)
+                }
+                val diffText = when (question.difficulty) {
+                    "سهل" -> Color(0xFF2E7D32)
+                    "متوسط" -> Color(0xFFE65100)
+                    else -> Color(0xFFC62828)
+                }
+
+                Surface(
+                    color = diffBg,
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Text(
                         text = question.difficulty,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = when (question.difficulty) {
-                            "سهل" -> Color(0xFF2E7D32)
-                            "متوسط" -> Color(0xFFE65100)
-                            else -> Color(0xFFC62828)
-                        }
+                        color = diffText
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
+            // Question text
             Text(
                 text = question.questionText,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Options List
             question.options.forEachIndexed { optIndex, optionText ->
                 val isSelected = (selectedOption == optIndex)
                 val isCorrect = (optIndex == question.correctIndex)
 
-                val optionColor = when {
+                val optionBgColor = when {
+                    showResult && isCorrect -> Color(0xFFE8F5E9)
+                    showResult && isSelected && !isCorrect -> Color(0xFFFFEBEE)
+                    isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                }
+
+                val optionBorderColor = when {
                     showResult && isCorrect -> Color(0xFF4CAF50)
                     showResult && isSelected && !isCorrect -> Color(0xFFF44336)
                     isSelected -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.surfaceVariant
+                    else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                }
+
+                val optionLabelLetter = when (optIndex) {
+                    0 -> "أ"
+                    1 -> "ب"
+                    2 -> "ج"
+                    3 -> "د"
+                    else -> "${optIndex + 1}"
                 }
 
                 Surface(
                     onClick = { if (!showResult) onOptionSelected(optIndex) },
-                    shape = RoundedCornerShape(10.dp),
-                    color = optionColor.copy(alpha = if (isSelected || (showResult && isCorrect)) 0.15f else 0.4f),
+                    shape = RoundedCornerShape(12.dp),
+                    color = optionBgColor,
+                    border = BorderStroke(1.dp, optionBorderColor),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
@@ -394,29 +593,82 @@ fun QuizQuestionCard(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = { if (!showResult) onOptionSelected(optIndex) },
-                            enabled = !showResult
+                        Box(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .clip(CircleShape)
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = optionLabelLetter,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Text(
+                            text = optionText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = optionText, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+
+                        if (showResult && isCorrect) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "إجابة صحيحة",
+                                tint = Color(0xFF2E7D32),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else if (showResult && isSelected && !isCorrect) {
+                            Icon(
+                                imageVector = Icons.Default.Cancel,
+                                contentDescription = "إجابة خاطئة",
+                                tint = Color(0xFFC62828),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
 
             if (showResult) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
-                        .padding(10.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f))
                 ) {
-                    Column {
-                        Text(text = "💡 الشرح الأكاديمي:", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        Text(text = question.explanation, fontSize = 11.sp)
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "الشرح الأكاديمي والتعليل:",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = question.explanation,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.9f)
+                            )
+                        }
                     }
                 }
             }
@@ -432,26 +684,44 @@ fun QuestionBrowseCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header: Subject, Level, History Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${question.faculty} • ${question.subject}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = question.subject,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "مستوى ${question.level} • فصل ${question.semester}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
-                // History & Revision Log Button
+                // History Button
                 Surface(
                     onClick = onViewHistory,
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -460,37 +730,93 @@ fun QuestionBrowseCard(
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "سجل التعديلات",
+                            text = "سجل المراجعة",
                             fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = question.questionText,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
+            // Options summary list
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .padding(10.dp)
+            ) {
+                Text(
+                    text = "الخيارات المتاحة (${question.options.size}):",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                question.options.forEachIndexed { idx, opt ->
+                    val isCorrect = (idx == question.correctIndex)
+                    Row(
+                        modifier = Modifier.padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${idx + 1}. $opt",
+                            fontSize = 11.sp,
+                            color = if (isCorrect) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isCorrect) FontWeight.Bold else FontWeight.Normal
+                        )
+                        if (isCorrect) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "الإجابة الصحيحة",
+                                    fontSize = 9.sp,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Tags Row
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 question.tags.forEach { tag ->
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
-                        Text(text = tag, fontSize = 10.sp, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            text = tag,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -513,7 +839,7 @@ fun QuestionHistoryBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 24.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -521,17 +847,33 @@ fun QuestionHistoryBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "سجل التحديثات والمراجعة الأكاديمية",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "سجل المراجعة والتحديثات",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "الأرشيف الأكاديمي لإصدارات السؤال",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 IconButton(onClick = onDismiss) {
@@ -541,44 +883,94 @@ fun QuestionHistoryBottomSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "السؤال: ${question.questionText}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "نص السؤال الحالي:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = question.questionText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "تاريخ الإصدارات والمراجعات التاريخية:",
+                text = "تاريخ التعديلات والمراجعات:",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             if (question.versionHistory.isEmpty()) {
-                Text(text = "لا توجد تعديلات سابقة لهذا السؤال.", fontSize = 12.sp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "لا توجد تعديلات سابقة لهذا السؤال.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             } else {
                 question.versionHistory.forEach { version ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = "الإصدار ${version.version}", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                Text(text = version.date, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Surface(
+                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = version.version,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                                Text(
+                                    text = version.date,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
-                            Text(text = "بواسطة: ${version.modifiedBy}", fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "ملاحظة التعديل: ${version.changeNote}", fontSize = 11.sp)
+                            Text(
+                                text = "المعدِّل: ${version.modifiedBy}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "ملاحظة التعديل: ${version.changeNote}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 }
