@@ -527,6 +527,20 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // Notification Actions
+    fun sendNotification(title: String, message: String, type: String = "GENERAL") {
+        viewModelScope.launch {
+            val notif = NotificationEntity(
+                id = "notif_${System.currentTimeMillis()}",
+                title = title,
+                message = message,
+                timestamp = System.currentTimeMillis(),
+                type = type,
+                isRead = false
+            )
+            repository.addNotification(notif)
+        }
+    }
+
     fun markNotificationAsRead(id: String) {
         viewModelScope.launch {
             repository.markNotificationAsRead(id)
@@ -542,6 +556,12 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     fun deleteNotification(notification: NotificationEntity) {
         viewModelScope.launch {
             repository.deleteNotification(notification)
+        }
+    }
+
+    fun deleteAllNotifications() {
+        viewModelScope.launch {
+            repository.deleteAllNotifications()
         }
     }
 

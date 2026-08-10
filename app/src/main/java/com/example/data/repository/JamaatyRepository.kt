@@ -41,6 +41,10 @@ class JamaatyRepository(private val appDao: AppDao) {
         appDao.deleteNotification(notification)
     }
 
+    suspend fun deleteAllNotifications() {
+        appDao.deleteAllNotifications()
+    }
+
     // Academic / GPA
     val semesters: Flow<List<SemesterEntity>> = appDao.getAllSemesters()
 
