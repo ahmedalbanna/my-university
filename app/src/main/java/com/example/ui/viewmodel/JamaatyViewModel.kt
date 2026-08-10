@@ -500,9 +500,11 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             )
             repository.addPayment(newPayment)
 
-            // Deduct balance if using balance
-            if (method.contains("المحفظة")) {
-                val current = _studentProfile.value
+            // Update balance: deduct if using wallet balance, increase if recharging
+            val current = _studentProfile.value
+            if (category == "RECHARGE" || title.contains("شحن")) {
+                _studentProfile.value = current.copy(balance = current.balance + amount)
+            } else if (method.contains("المحفظة")) {
                 _studentProfile.value = current.copy(balance = (current.balance - amount).coerceAtLeast(0.0))
             }
         }
