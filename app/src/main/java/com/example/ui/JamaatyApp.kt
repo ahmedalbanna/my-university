@@ -148,7 +148,15 @@ fun JamaatyApp(
     // Force RTL for Arabic layout
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         if (!onboardingCompleted) {
-            OnboardingScreen(onFinished = { viewModel.completeOnboarding() })
+            OnboardingScreen(
+                initialProfile = profile,
+                universities = viewModel.getUniversities(),
+                faculties = viewModel.getFaculties().filter { it != "الكل" },
+                getMajorsForFaculty = { fac -> viewModel.getMajorsForFaculty(fac) },
+                onSaveProfileAndFinish = { name, id, uni, fac, maj, lvl ->
+                    viewModel.updateStudentProfile(name, id, uni, fac, maj, lvl)
+                }
+            )
         } else {
             Scaffold(
                 topBar = {

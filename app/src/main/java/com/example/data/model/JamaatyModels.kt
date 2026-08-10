@@ -88,6 +88,7 @@ data class ExamResult(
 data class StudentProfile(
     val name: String = "أحمد محمد العباسي",
     val studentId: String = "2024-CSC-88412",
+    val university: String = "جامعة الملك سعود",
     val faculty: String = "كلية الحاسبات والمعلومات",
     val major: String = "علوم الحاسب والذكاء الاصطناعي",
     val level: Int = 3,

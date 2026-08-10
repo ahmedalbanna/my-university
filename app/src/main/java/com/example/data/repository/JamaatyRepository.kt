@@ -100,7 +100,48 @@ class JamaatyRepository(private val appDao: AppDao) {
         appDao.insertPayment(payment)
     }
 
-    fun getStudentProfile(): StudentProfile = StudentProfile()
+    suspend fun getSavedProfile(): StudentProfile {
+        val name = appDao.getPreference("profile_name") ?: "أحمد محمد العباسي"
+        val studentId = appDao.getPreference("profile_id") ?: "2024-CSC-88412"
+        val university = appDao.getPreference("profile_university") ?: "جامعة الملك سعود"
+        val faculty = appDao.getPreference("profile_faculty") ?: "كلية الحاسبات والمعلومات"
+        val major = appDao.getPreference("profile_major") ?: "علوم الحاسب والذكاء الاصطناعي"
+        val level = appDao.getPreference("profile_level")?.toIntOrNull() ?: 3
+        val gpa = appDao.getPreference("profile_gpa")?.toDoubleOrNull() ?: 3.84
+        val balance = appDao.getPreference("profile_balance")?.toDoubleOrNull() ?: 2450.00
+        return StudentProfile(
+            name = name,
+            studentId = studentId,
+            university = university,
+            faculty = faculty,
+            major = major,
+            level = level,
+            gpa = gpa,
+            balance = balance
+        )
+    }
+
+    suspend fun saveStudentProfile(profile: StudentProfile) {
+        appDao.insertPreference(PreferenceEntity("profile_name", profile.name))
+        appDao.insertPreference(PreferenceEntity("profile_id", profile.studentId))
+        appDao.insertPreference(PreferenceEntity("profile_university", profile.university))
+        appDao.insertPreference(PreferenceEntity("profile_faculty", profile.faculty))
+        appDao.insertPreference(PreferenceEntity("profile_major", profile.major))
+        appDao.insertPreference(PreferenceEntity("profile_level", profile.level.toString()))
+        appDao.insertPreference(PreferenceEntity("profile_gpa", profile.gpa.toString()))
+        appDao.insertPreference(PreferenceEntity("profile_balance", profile.balance.toString()))
+    }
+
+    fun getUniversities(): List<String> = listOf(
+        "جامعة الملك سعود",
+        "جامعة الملك عبدالعزيز",
+        "جامعة أم القرى",
+        "جامعة الملك فهد للبترول والمعادن",
+        "جامعة القاهرة",
+        "جامعة الملك خالد",
+        "جامعة الإمام محمد بن سعود الإسلامية",
+        "جامعة الأميرة نورة bint عبدالرحمن"
+    )
 
     fun getFaculties(): List<String> = listOf(
         "الكل",
@@ -110,6 +151,17 @@ class JamaatyRepository(private val appDao: AppDao) {
         "كلية إدارة الأعمال",
         "كلية العلوم"
     )
+
+    fun getMajorsForFaculty(faculty: String): List<String> {
+        return when (faculty) {
+            "كلية الحاسبات والمعلومات" -> listOf("علوم الحاسب والذكاء الاصطناعي", "هندسة البرمجيات", "نظم المعلومات", "الأمن السيبراني")
+            "كلية الهندسة" -> listOf("الهندسة المدنية", "الهندسة الكهربائية", "الهندسة الميكانيكية", "الهندسة المعمارية")
+            "كلية الطب والجراحة" -> listOf("الطب والجراحة العامة", "طب وجراحة الأسنان", "الصيدلة الإكلينيكية", "العلوم الطبية التطبيقية")
+            "كلية إدارة الأعمال" -> listOf("إدارة الأعمال", "المحاسبة والمالية", "التسويق الرقمي", "إدارة سلاسل الإمداد")
+            "كلية العلوم" -> listOf("الرياضيات التطبيقية", "الفيزياء والفيزياء الطبية", "الكيمياء الحيوية", "الأحياء والوراثة")
+            else -> listOf("علوم الحاسب والذكاء الاصطناعي", "هندسة البرمجيات", "إدارة الأعمال", "تخصص عام")
+        }
+    }
 
     fun getBooks(): List<Book> = listOf(
         // Level 1

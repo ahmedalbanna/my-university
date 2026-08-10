@@ -172,7 +172,7 @@ fun DigitalStudentCard(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = profile.faculty,
+                            text = "${profile.university} • ${profile.faculty}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFFFFD700),
                             fontWeight = FontWeight.SemiBold

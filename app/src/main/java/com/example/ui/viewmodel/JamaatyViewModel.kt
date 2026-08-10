@@ -39,10 +39,28 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     private val _onboardingCompleted = MutableStateFlow(false)
     val onboardingCompleted: StateFlow<Boolean> = _onboardingCompleted.asStateFlow()
 
+    // Student Profile
+    private val _studentProfile = MutableStateFlow(StudentProfile())
+    val studentProfile: StateFlow<StudentProfile> = _studentProfile.asStateFlow()
+
+    // Level & Faculty Filters
+    private val _selectedLevel = MutableStateFlow(3) // Default level 3
+    val selectedLevel: StateFlow<Int> = _selectedLevel.asStateFlow()
+
+    private val _selectedSemester = MutableStateFlow(1) // 1 or 2
+    val selectedSemester: StateFlow<Int> = _selectedSemester.asStateFlow()
+
+    private val _selectedFaculty = MutableStateFlow("الكل")
+    val selectedFaculty: StateFlow<String> = _selectedFaculty.asStateFlow()
+
     init {
-        // Load onboarding state
+        // Load onboarding state & profile
         viewModelScope.launch {
             _onboardingCompleted.value = repository.isOnboardingCompleted()
+            val savedProfile = repository.getSavedProfile()
+            _studentProfile.value = savedProfile
+            _selectedLevel.value = savedProfile.level
+            _selectedFaculty.value = savedProfile.faculty
         }
 
         // Seed initial sample payment if empty
@@ -113,19 +131,35 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // Student Profile
-    private val _studentProfile = MutableStateFlow(repository.getStudentProfile())
-    val studentProfile: StateFlow<StudentProfile> = _studentProfile.asStateFlow()
+    fun updateStudentProfile(
+        name: String,
+        studentId: String,
+        university: String,
+        faculty: String,
+        major: String,
+        level: Int
+    ) {
+        val updated = _studentProfile.value.copy(
+            name = name,
+            studentId = studentId,
+            university = university,
+            faculty = faculty,
+            major = major,
+            level = level
+        )
+        _studentProfile.value = updated
+        _selectedLevel.value = level
+        _selectedFaculty.value = faculty
 
-    // Level & Faculty Filters
-    private val _selectedLevel = MutableStateFlow(3) // Default level 3
-    val selectedLevel: StateFlow<Int> = _selectedLevel.asStateFlow()
+        viewModelScope.launch {
+            repository.saveStudentProfile(updated)
+            repository.setOnboardingCompleted(true)
+            _onboardingCompleted.value = true
+        }
+    }
 
-    private val _selectedSemester = MutableStateFlow(1) // 1 or 2
-    val selectedSemester: StateFlow<Int> = _selectedSemester.asStateFlow()
-
-    private val _selectedFaculty = MutableStateFlow("الكل")
-    val selectedFaculty: StateFlow<String> = _selectedFaculty.asStateFlow()
+    fun getUniversities() = repository.getUniversities()
+    fun getMajorsForFaculty(faculty: String) = repository.getMajorsForFaculty(faculty)
 
     // Search queries
     private val _bookSearchQuery = MutableStateFlow("")
