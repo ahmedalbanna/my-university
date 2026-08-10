@@ -1,74 +1,40 @@
 package com.example.ui.screens.more
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkRemove
-import androidx.compose.material.icons.filled.Calculate
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Grade
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Science
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.entities.FavoriteEntity
 import com.example.data.model.ExamResult
 import com.example.data.model.VocabularyCard
 import com.example.data.model.WorldLibrary
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.ui.graphics.vector.ImageVector
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 
 private data class FavTypeInfo(
     val label: String,
@@ -91,7 +57,10 @@ fun TranslateMoreScreen(
     onToggleFavorite: (String, String, String, String, String) -> Unit,
     onOpenGpaCalculator: () -> Unit
 ) {
-    var activeSubTab by remember { mutableStateOf(0) } // 0: المترجم الأكاديمي, 1: المفضلة, 2: نتائج الامتحانات, 3: مكتبات عالمية
+    var activeSubTab by remember { mutableIntStateOf(0) } // 0: المترجم الأكاديمي, 1: المفضلة, 2: نتائج الامتحانات, 3: مكتبات عالمية
+    var sourceLang by remember { mutableStateOf("الإنجليزية") }
+    var targetLang by remember { mutableStateOf("العربية") }
+    var vocabSearchQuery by remember { mutableStateOf("") }
     var favSearchQuery by remember { mutableStateOf("") }
     var favSelectedType by remember { mutableStateOf("ALL") }
     val context = LocalContext.current
@@ -102,79 +71,341 @@ fun TranslateMoreScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag("translate_more_screen_root")
     ) {
-        // SubTabs Bar
-        SecondaryTabRow(
-            selectedTabIndex = activeSubTab,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
+        // Hero Header Banner
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 8.dp),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
-            Tab(selected = activeSubTab == 0, onClick = { activeSubTab = 0 }, text = { Text("الترجمة الأكاديمية") })
-            Tab(selected = activeSubTab == 1, onClick = { activeSubTab = 1 }, text = { Text("المفضلة (${favorites.size})") })
-            Tab(selected = activeSubTab == 2, onClick = { activeSubTab = 2 }, text = { Text("النتائج") })
-            Tab(selected = activeSubTab == 3, onClick = { activeSubTab = 3 }, text = { Text("مكتبات عالمية") })
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.88f)
+                            )
+                        )
+                    )
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.22f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Translate,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column {
+                                Text(
+                                    text = "الترجمة والأدوات الأكاديمية 🌐",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "قاموس فورى • مرجعيات • نتائج • مكتبات رقمية",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
+                        }
+
+                        // Quick GPA Badge
+                        Surface(
+                            onClick = onOpenGpaCalculator,
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color.White.copy(alpha = 0.22f),
+                            contentColor = Color.White
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Calculate,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "حاسبة GPA",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // Segmented SubTab Mode Switcher
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val tabs = listOf(
+                    0 to "🔤 الترجمة",
+                    1 to "🔖 المفضلة (${favorites.size})",
+                    2 to "📊 النتائج",
+                    3 to "🌍 مكتبات"
+                )
 
+                tabs.forEach { (index, title) ->
+                    val isSelected = activeSubTab == index
+                    Surface(
+                        onClick = { activeSubTab = index },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = title,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Tab Content
         when (activeSubTab) {
             0 -> {
                 // ACADEMIC TRANSLATION & FLASHCARDS
+                val filteredVocab = vocabularyCards.filter { v ->
+                    vocabSearchQuery.isBlank() ||
+                            v.termAr.contains(vocabSearchQuery, ignoreCase = true) ||
+                            v.termEn.contains(vocabSearchQuery, ignoreCase = true) ||
+                            v.definitionAr.contains(vocabSearchQuery, ignoreCase = true)
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Translate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "تطبيق الترجمة الأكاديمية والمناهج",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                // Language Swap Direction Bar
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer
+                                    ) {
+                                        Text(
+                                            text = sourceLang,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            val temp = sourceLang
+                                            sourceLang = targetLang
+                                            targetLang = temp
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.SwapHoriz,
+                                            contentDescription = "تبديل اللغات",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.secondaryContainer
+                                    ) {
+                                        Text(
+                                            text = targetLang,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
+                                    }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
 
+                                // Input Text Field
                                 OutlinedTextField(
                                     value = translationInput,
                                     onValueChange = onTranslateInput,
-                                    placeholder = { Text("اكتب نص الدرس أو المصطلح الأكاديمي بالإنجليزية أو العربية...") },
+                                    placeholder = { Text("أدخل النص أو المصطلح الأكاديمي للترجمة المباشرة...", fontSize = 13.sp) },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(120.dp)
                                         .testTag("translation_input_field"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp),
+                                    trailingIcon = if (translationInput.isNotEmpty()) {
+                                        {
+                                            IconButton(onClick = { onTranslateInput("") }) {
+                                                Icon(Icons.Default.Clear, contentDescription = "مسح النص", modifier = Modifier.size(18.dp))
+                                            }
+                                        }
+                                    } else null
                                 )
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                if (isTranslating) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(text = "جاري الترجمة الفورية وضبط المصطلحات...", fontSize = 12.sp)
+                                // Quick Sample Tag Chips
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    items(listOf("خوارزميات البرمجة", "Data Structures", "Quantum Physics", "الهندسة المعمارية", "Medical Terms")) { sample ->
+                                        Surface(
+                                            onClick = { onTranslateInput(sample) },
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                        ) {
+                                            Text(
+                                                text = "+ $sample",
+                                                fontSize = 10.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
                                     }
-                                } else if (translationOutput.isNotEmpty()) {
-                                    Box(
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                // Loading state vs Output Box
+                                if (isTranslating) {
+                                    Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
-                                            .padding(12.dp)
+                                            .padding(vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
                                     ) {
-                                        Column {
-                                            Text(text = "الترجمة الأكاديمية المعتمدة:", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(text = translationOutput, style = MaterialTheme.typography.bodyMedium)
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(text = "جاري معالجة النص وضبط المصطلحات الأكاديمية...", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                } else if (translationOutput.isNotEmpty()) {
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(14.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                                    ) {
+                                        Column(modifier = Modifier.padding(14.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.AutoAwesome,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        text = "الترجمة الأكاديمية المعتمدة:",
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 12.sp,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+
+                                                Row {
+                                                    IconButton(
+                                                        onClick = {
+                                                            Toast.makeText(context, "تم نسخ الترجمة الحافظة", Toast.LENGTH_SHORT).show()
+                                                        },
+                                                        modifier = Modifier.size(28.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.ContentCopy, contentDescription = "نسخ", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                                    }
+
+                                                    IconButton(
+                                                        onClick = {
+                                                            Toast.makeText(context, "تمت إضافة المصطلح إلى قاموسك الشخصي", Toast.LENGTH_SHORT).show()
+                                                        },
+                                                        modifier = Modifier.size(28.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.BookmarkAdd, contentDescription = "حفظ", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(6.dp))
+
+                                            Text(
+                                                text = translationOutput,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                lineHeight = 20.sp
+                                            )
                                         }
                                     }
                                 }
@@ -183,21 +414,72 @@ fun TranslateMoreScreen(
                     }
 
                     item {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "💡 بطاقات المصطلحات الأكاديمية (Flashcards):",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Text(
+                                text = "${filteredVocab.size} مصطلح",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "💡 قاموس المصطلحات الأكاديمية (Flashcards):",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+
+                        OutlinedTextField(
+                            value = vocabSearchQuery,
+                            onValueChange = { vocabSearchQuery = it },
+                            placeholder = { Text("بحث في المصطلحات والمفاهيم...", fontSize = 12.sp) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                            trailingIcon = if (vocabSearchQuery.isNotEmpty()) {
+                                {
+                                    IconButton(onClick = { vocabSearchQuery = "" }) {
+                                        Icon(Icons.Default.Clear, contentDescription = "مسح", modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                            } else null,
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
 
-                    items(vocabularyCards) { card ->
-                        VocabularyFlashcard(card = card)
+                    if (filteredVocab.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "لا توجد مصطلحات تطابق البحث الحرفي",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        items(filteredVocab) { card ->
+                            VocabularyFlashcard(card = card)
+                        }
                     }
                 }
             }
+
             1 -> {
-                // FAVORITES MANAGEMENT & REPOSITORY DASHBOARD
+                // FAVORITES MANAGEMENT
                 val filteredFavorites = favorites.filter { fav ->
                     val matchesType = when (favSelectedType) {
                         "ALL" -> true
@@ -218,19 +500,17 @@ fun TranslateMoreScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
-                    // Favorites Summary Header
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,7 +519,7 @@ fun TranslateMoreScreen(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Box(
                                             modifier = Modifier
-                                                .size(36.dp)
+                                                .size(38.dp)
                                                 .clip(CircleShape)
                                                 .background(MaterialTheme.colorScheme.primary),
                                             contentAlignment = Alignment.Center
@@ -254,7 +534,7 @@ fun TranslateMoreScreen(
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Column {
                                             Text(
-                                                text = "سجل المرجعيات والمفضلة الأكاديمية",
+                                                text = "المفضلة والمرجعيات الأكاديمية",
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 15.sp,
                                                 color = MaterialTheme.colorScheme.onSurface
@@ -270,9 +550,9 @@ fun TranslateMoreScreen(
                                     IconButton(
                                         onClick = {
                                             if (favorites.isNotEmpty()) {
-                                                Toast.makeText(context, "جاري تصدير قائمة المفضلة الأكاديمية صيغة TXT/PDF...", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(context, "جاري تصدير قائمة المفضلة الأكاديمية بصيغة TXT/PDF...", Toast.LENGTH_LONG).show()
                                             } else {
-                                                Toast.makeText(context, "المفضلة فارغة حالياً", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "قائمة المفضلة فارغة حالياً", Toast.LENGTH_SHORT).show()
                                             }
                                         }
                                     ) {
@@ -287,14 +567,13 @@ fun TranslateMoreScreen(
                         }
                     }
 
-                    // Search & Filter Controls
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedTextField(
                                 value = favSearchQuery,
                                 onValueChange = { favSearchQuery = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("بحث في العناصر المحفوظة بالاسم أو الكلية...", fontSize = 13.sp) },
+                                placeholder = { Text("بحث في العناصر المحفوظة بالاسم أو الكلية...", fontSize = 12.sp) },
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
                                 trailingIcon = {
                                     if (favSearchQuery.isNotEmpty()) {
@@ -307,10 +586,7 @@ fun TranslateMoreScreen(
                                 shape = RoundedCornerShape(12.dp)
                             )
 
-                            // Category Filter Chips Row
-                            androidx.compose.foundation.lazy.LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 val filters = listOf(
                                     "ALL" to "الكل (${favorites.size})",
                                     "BOOK" to "📚 كتب (${favorites.count { it.type == "BOOK" }})",
@@ -323,14 +599,14 @@ fun TranslateMoreScreen(
                                     val isSelected = favSelectedType == typeKey
                                     Surface(
                                         onClick = { favSelectedType = typeKey },
-                                        shape = RoundedCornerShape(20.dp),
+                                        shape = RoundedCornerShape(14.dp),
                                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
                                         contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     ) {
                                         Text(
                                             text = label,
-                                            fontSize = 12.sp,
+                                            fontSize = 11.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                         )
@@ -340,7 +616,6 @@ fun TranslateMoreScreen(
                         }
                     }
 
-                    // Empty States vs Filtered Favorite Items
                     if (filteredFavorites.isEmpty()) {
                         item {
                             Box(
@@ -358,17 +633,18 @@ fun TranslateMoreScreen(
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Text(
-                                        text = if (favorites.isEmpty()) "لم تقم بإضافة أية مرجعيات أو كتب للمفضلة بعد" else "لا توجد نتائج تطابق بحثك الفعلي",
+                                        text = if (favorites.isEmpty()) "لم تقم بإضافة أية مرجعيات للمفضلة بعد" else "لا توجد نتائج تطابق بحثك الفعلي",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
+                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "يمكنك حفظ الكتب والأبحاث والمكتبات من أقسام التطبيق بالضغط على أيقونة الإشارة المرجعية 🔖",
+                                        text = "يمكنك حفظ الكتب والأبحاث والمكتبات بالضغط على أيقونة الإشارة المرجعية 🔖",
                                         fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.outline,
-                                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(horizontal = 24.dp)
                                     )
                                 }
                             }
@@ -385,9 +661,10 @@ fun TranslateMoreScreen(
 
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Row(
@@ -478,12 +755,12 @@ fun TranslateMoreScreen(
                                             onClick = {
                                                 Toast.makeText(context, "فتح معاينة المرجع: ${fav.title}", Toast.LENGTH_SHORT).show()
                                             },
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.OpenInNew,
@@ -493,7 +770,7 @@ fun TranslateMoreScreen(
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text(
-                                                    text = "معاينة وفتح المرجع",
+                                                    text = "معاينة المرجع",
                                                     fontSize = 12.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = MaterialTheme.colorScheme.primary
@@ -507,19 +784,22 @@ fun TranslateMoreScreen(
                     }
                 }
             }
+
             2 -> {
-                // EXAM RESULTS & GPA CALCULATOR DASHBOARD
+                // EXAM RESULTS & GPA DASHBOARD
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp),
@@ -537,35 +817,38 @@ fun TranslateMoreScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "كشف نتائج الامتحانات والتقييم الأكاديمي",
+                                        text = "كشف نتائج الامتحانات والتقييم الأكاديمي 🎓",
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        fontSize = 15.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
 
                                 Surface(
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                    modifier = Modifier.fillMaxWidth()
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(12.dp),
+                                        modifier = Modifier.padding(14.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Text(
-                                            text = "المعدل التراكمي الفصل الحالي",
+                                            text = "المعدل التراكمي للفصل الحالي",
                                             style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
                                             text = "3.84 / 4.00",
-                                            fontSize = 24.sp,
+                                            fontSize = 26.sp,
                                             fontWeight = FontWeight.Black,
                                             color = MaterialTheme.colorScheme.primary
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
                                             text = "التقدير العام: ممتاز مرتفع (Excellent)",
                                             fontSize = 12.sp,
@@ -584,11 +867,12 @@ fun TranslateMoreScreen(
                                     Button(
                                         onClick = onOpenGpaCalculator,
                                         modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(12.dp),
+                                        contentPadding = PaddingValues(vertical = 10.dp)
                                     ) {
                                         Icon(Icons.Default.Calculate, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("حاسبة GPA", fontSize = 12.sp)
+                                        Text("حاسبة GPA", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
 
                                     Surface(
@@ -598,10 +882,10 @@ fun TranslateMoreScreen(
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.surface,
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                                            modifier = Modifier.padding(vertical = 10.dp),
                                             horizontalArrangement = Arrangement.Center,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
@@ -637,9 +921,10 @@ fun TranslateMoreScreen(
                     items(examResults) { res ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                         ) {
                             Row(
                                 modifier = Modifier.padding(14.dp),
@@ -652,7 +937,7 @@ fun TranslateMoreScreen(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(42.dp)
+                                            .size(44.dp)
                                             .clip(CircleShape)
                                             .background(
                                                 if (res.score >= 90) MaterialTheme.colorScheme.primaryContainer
@@ -663,7 +948,7 @@ fun TranslateMoreScreen(
                                         Text(
                                             text = res.grade,
                                             fontWeight = FontWeight.Black,
-                                            fontSize = 15.sp,
+                                            fontSize = 16.sp,
                                             color = if (res.score >= 90) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
                                         )
                                     }
@@ -674,19 +959,20 @@ fun TranslateMoreScreen(
                                         Text(
                                             text = res.name,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Surface(
                                                 shape = RoundedCornerShape(4.dp),
-                                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                                modifier = Modifier.padding(top = 2.dp)
+                                                color = MaterialTheme.colorScheme.surfaceVariant
                                             ) {
                                                 Text(
                                                     text = res.code,
                                                     fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Medium,
-                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                                 )
                                             }
                                             Spacer(modifier = Modifier.width(6.dp))
@@ -718,45 +1004,172 @@ fun TranslateMoreScreen(
                     }
                 }
             }
+
             3 -> {
                 // WORLD LIBRARIES
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     item {
-                        Text(
-                            text = "🌐 روابط المكتبات الرقمية والعالمية الموثوقة:",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.secondary),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Public,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "المكتبات الرقمية العالمية الموثوقة 🌐",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "وصول مباشر لقواعد البيانات والأبحاث العالمية المعتمدة",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     items(worldLibraries) { lib ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Public, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Column {
-                                        Text(text = lib.nameAr, fontWeight = FontWeight.Bold)
-                                        Text(text = lib.nameEn, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Language,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = lib.nameAr,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = lib.nameEn,
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            onToggleFavorite(lib.id, "LIBRARY", lib.nameAr, lib.nameEn, "مكتبة عالمية")
+                                            Toast.makeText(context, "تم حفظ المكتبة في المفضلة 🔖", Toast.LENGTH_SHORT).show()
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.BookmarkBorder,
+                                            contentDescription = "حفظ",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
 
-                                Text(text = lib.description, style = MaterialTheme.typography.bodySmall)
+                                Text(
+                                    text = lib.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 18.sp
+                                )
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
 
-                                Text(text = lib.url, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = lib.url,
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    )
+
+                                    Surface(
+                                        onClick = {
+                                            Toast.makeText(context, "جاري فتح الرابط: ${lib.url}", Toast.LENGTH_SHORT).show()
+                                        },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.OpenInNew,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = "زيارة الموقع",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -773,26 +1186,98 @@ fun VocabularyFlashcard(card: VocabularyCard) {
     Card(
         onClick = { expanded = !expanded },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = card.termAr, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Text(text = card.termEn, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Translate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = card.termAr,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
+                        Text(
+                            text = card.termEn,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = "توسيع",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             AnimatedVisibility(visible = expanded) {
-                Column(modifier = Modifier.padding(top = 8.dp)) {
-                    Text(text = "الشرح بالعربية: ${card.definitionAr}", fontSize = 12.sp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        text = "الشرح بالعربية: ${card.definitionAr}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "English: ${card.definitionEn}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "مثال: ${card.example}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.tertiary)
+                    Text(
+                        text = "English Definition: ${card.definitionEn}",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                    ) {
+                        Text(
+                            text = "💡 مثال: ${card.example}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             }
         }
