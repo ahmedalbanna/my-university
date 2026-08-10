@@ -83,9 +83,9 @@ fun HomeScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                .padding(horizontal = 16.dp, vertical = 20.dp),
+            shape = RoundedCornerShape(28.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Box {
                 // Background Image
@@ -94,7 +94,7 @@ fun HomeScreen(
                     contentDescription = "جامعتي",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
+                        .height(220.dp),
                     contentScale = ContentScale.Crop
                 )
 
@@ -102,12 +102,13 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(220.dp)
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color.Black.copy(alpha = 0.25f),
-                                    Color.Black.copy(alpha = 0.85f)
+                                    Color.Black.copy(alpha = 0.1f),
+                                    Color.Black.copy(alpha = 0.7f),
+                                    Color.Black.copy(alpha = 0.95f)
                                 )
                             )
                         )
@@ -116,13 +117,13 @@ fun HomeScreen(
                 // Header Info Content
                 Column(
                     modifier = Modifier
-                        .padding(20.dp)
+                        .padding(24.dp)
                         .align(Alignment.BottomStart)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.Bottom
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Surface(
@@ -130,7 +131,7 @@ fun HomeScreen(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
                             ) {
                                 Text(
-                                    text = "🏛️ البوابة الأكاديمية الرسمية",
+                                    text = "🏛️ البوابة الأكاديمية",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -138,42 +139,44 @@ fun HomeScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
                                 text = "مرحباً، ${profile.name}",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                                letterSpacing = (-0.5).sp
                             )
 
                             Text(
                                 text = "${profile.university} • ${profile.major}",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White.copy(alpha = 0.85f)
                             )
                         }
 
                         // GPA Badge
                         Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color.White.copy(alpha = 0.2f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.4f))
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color.White.copy(alpha = 0.15f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
                         ) {
                             Column(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
                                     text = "المعدل",
                                     fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color.White.copy(alpha = 0.8f)
                                 )
                                 Text(
-                                    text = "${profile.gpa}",
-                                    fontWeight = FontWeight.ExtraBold,
+                                    text = String.format("%.2f", profile.gpa),
+                                    fontWeight = FontWeight.Black,
                                     color = Color.White,
-                                    fontSize = 17.sp
+                                    fontSize = 18.sp
                                 )
                             }
                         }
@@ -186,14 +189,20 @@ fun HomeScreen(
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "🎯 اختر المستوى الدراسي الحالي:",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = "تحديد المستوى الدراسي الحالي:",
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -361,7 +370,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Recommended Textbooks Horizontal Carousel
-        Column {
+        Column(modifier = Modifier.padding(bottom = 16.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -369,12 +378,21 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "📚 مراجع موصى بها (المستوى $selectedLevel)",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.MenuBook,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "مراجع موصى بها (المستوى $selectedLevel)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 Text(
                     text = "المكتبة الكاملة",
                     style = MaterialTheme.typography.labelMedium,
