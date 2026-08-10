@@ -3,6 +3,7 @@ package com.example.ui.screens.library
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,7 +63,7 @@ fun LibraryScreen(
     isFavorite: (String) -> Boolean,
     onAddNewProject: ((title: String, studentName: String, supervisor: String, faculty: String, year: String, level: Int, summary: String, tags: List<String>) -> Unit)? = null
 ) {
-    var activeSubTab by remember { mutableStateOf(0) } // 0: الكتب والإنتاج, 1: الأبحاث والمشاريع, 2: المكتبات العالمية
+    var activeSubTab by remember { mutableIntStateOf(0) } // 0: الكتب والإنتاج, 1: الأبحاث والمشاريع, 2: المكتبات العالمية
     var selectedCategoryFilter by remember { mutableStateOf("الكل") }
     var selectedBookForReader by remember { mutableStateOf<Book?>(null) }
     var selectedProjectForDetails by remember { mutableStateOf<Project?>(null) }
@@ -77,88 +78,177 @@ fun LibraryScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag("library_screen_root")
     ) {
-        // Top SubTab Bar
-        SecondaryTabRow(
-            selectedTabIndex = activeSubTab,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
+        // Library Hero Header Banner
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 8.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
         ) {
-            Tab(
-                selected = activeSubTab == 0,
-                onClick = { activeSubTab = 0 },
-                text = { Text("📚 المقررات والكتب", fontWeight = FontWeight.Bold) },
-                modifier = Modifier.testTag("tab_books")
-            )
-            Tab(
-                selected = activeSubTab == 1,
-                onClick = { activeSubTab = 1 },
-                text = { Text("🔬 الأبحاث والمشاريع", fontWeight = FontWeight.Bold) },
-                modifier = Modifier.testTag("tab_projects")
-            )
-            Tab(
-                selected = activeSubTab == 2,
-                onClick = { activeSubTab = 2 },
-                text = { Text("🌐 المكتبات العالمية", fontWeight = FontWeight.Bold) },
-                modifier = Modifier.testTag("tab_world_libs")
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocalLibrary,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = "المكتبة والإنتاج الأكاديمي 📖",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "${books.size} كتاب مقرر • ${projects.size} بحث تخرج • ${worldLibraries.size} مكتبة عالمية",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
 
-        // Shared Level Selector (For Books and Projects)
+        // SubTab Navigation Bar
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val tabs = listOf(
+                    0 to "📚 الكتب والمراجع",
+                    1 to "🔬 الأبحاث والمشاريع",
+                    2 to "🌐 المكتبات العالمية"
+                )
+
+                tabs.forEach { (index, title) ->
+                    val isSelected = activeSubTab == index
+                    Surface(
+                        onClick = { activeSubTab = index },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = title,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Shared Level and Faculty Filter Bar (For Books & Projects)
         if (activeSubTab != 2) {
             Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 1.dp
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    // Faculty Selector Chips
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "المستوى الدراسي:",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            text = "الكلية:",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(end = 8.dp)
                         )
 
-                        // Faculty Chips Selector
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             items(faculties) { faculty ->
-                                FilterChip(
-                                    selected = (selectedFaculty == faculty),
+                                val isSelected = selectedFaculty == faculty
+                                Surface(
                                     onClick = { onSelectFaculty(faculty) },
-                                    label = { Text(faculty, fontSize = 11.sp) }
-                                )
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    border = if (isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.secondary) else null
+                                ) {
+                                    Text(
+                                        text = faculty,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                    )
+                                }
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Levels 1-5 Row
+                    // Level 1 to 5 Selector
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         (1..5).forEach { level ->
                             val isSelected = (level == selectedLevel)
                             Surface(
                                 onClick = { onSelectLevel(level) },
                                 shape = RoundedCornerShape(10.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                                 contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("lib_level_chip_$level")
                             ) {
                                 Box(
-                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    modifier = Modifier.padding(vertical = 7.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "المستوى $level",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
+                                        text = "مستوى $level",
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                     )
                                 }
                             }
@@ -176,58 +266,83 @@ fun LibraryScreen(
                     selectedCategoryFilter == "الكل" || book.category.contains(selectedCategoryFilter, ignoreCase = true)
                 }
 
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // Semester 1 vs Semester 2 Selector
-                    Row(
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                ) {
+                    // Semester 1 vs Semester 2 Segmented Row
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     ) {
-                        Surface(
-                            onClick = { onSelectSemester(1) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (selectedSemester == 1) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surface,
-                            contentColor = if (selectedSemester == 1) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurface,
-                            shadowElevation = 2.dp,
-                            modifier = Modifier.weight(1f)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Box(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
+                            Surface(
+                                onClick = { onSelectSemester(1) },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (selectedSemester == 1) MaterialTheme.colorScheme.secondary else Color.Transparent,
+                                contentColor = if (selectedSemester == 1) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Text(text = "الترم الأول (Semester 1)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Box(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "الفصل الأول (Semester 1)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
                             }
-                        }
 
-                        Surface(
-                            onClick = { onSelectSemester(2) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (selectedSemester == 2) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surface,
-                            contentColor = if (selectedSemester == 2) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurface,
-                            shadowElevation = 2.dp,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
+                            Surface(
+                                onClick = { onSelectSemester(2) },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (selectedSemester == 2) MaterialTheme.colorScheme.secondary else Color.Transparent,
+                                contentColor = if (selectedSemester == 2) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Text(text = "الترم الثاني (Semester 2)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Box(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "الفصل الثاني (Semester 2)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // Category Chips
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(categories) { cat ->
-                            FilterChip(
-                                selected = (selectedCategoryFilter == cat),
-                                onClick = { selectedCategoryFilter = cat },
-                                label = { Text(cat, fontSize = 12.sp) },
-                                leadingIcon = if (selectedCategoryFilter == cat) {
-                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                                } else null
-                            )
+                    // Category Chips & Search
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            items(categories) { cat ->
+                                val isSelected = selectedCategoryFilter == cat
+                                Surface(
+                                    onClick = { selectedCategoryFilter = cat },
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (isSelected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surface,
+                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outlineVariant)
+                                ) {
+                                    Text(
+                                        text = cat,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -237,40 +352,38 @@ fun LibraryScreen(
                     OutlinedTextField(
                         value = bookSearchQuery,
                         onValueChange = onBookSearchChange,
-                        placeholder = { Text("بحث باسم الكتاب، اسم الدكتور، أو المرجع...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        placeholder = { Text("بحث باسم الكتاب، اسم الدكتور، أو المرجع...", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
                         trailingIcon = if (bookSearchQuery.isNotEmpty()) {
                             {
                                 IconButton(onClick = { onBookSearchChange("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = "مسح")
+                                    Icon(Icons.Default.Close, contentDescription = "مسح", modifier = Modifier.size(18.dp))
                                 }
                             }
                         } else null,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("book_search_field"),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "كتب المستوى $selectedLevel • الترم $selectedSemester (${filteredBooks.size} كتاب):",
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "كتب المستوى $selectedLevel • الفصل $selectedSemester (${filteredBooks.size} كتاب):",
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     if (filteredBooks.isEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .weight(1f)
                                 .padding(24.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -279,27 +392,29 @@ fun LibraryScreen(
                                     painter = painterResource(id = R.drawable.library_empty_state_1786312083136),
                                     contentDescription = null,
                                     modifier = Modifier
-                                        .size(180.dp)
-                                        .clip(RoundedCornerShape(24.dp)),
+                                        .size(150.dp)
+                                        .clip(RoundedCornerShape(20.dp)),
                                     contentScale = ContentScale.Fit
                                 )
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                                 Text(
                                     text = "لا توجد كتب مطابقة للفلاتر الحالية",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "حاول تغيير المستوى أو التصنيف أو كلمة البحث",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = "حاول تغيير المستوى الدراسي أو الكلية أو كلمة البحث",
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     } else {
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(bottom = 16.dp)
                         ) {
                             items(filteredBooks) { book ->
                                 val isFav = isFavorite(book.id)
@@ -324,38 +439,43 @@ fun LibraryScreen(
             }
             1 -> {
                 // RESEARCHES & GRADUATION PROJECTS SECTION
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                ) {
                     // Header Banner card
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 12.dp),
+                            .padding(bottom = 8.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f))
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "🎓 منصة أبحاث ومشاريع التخرج",
+                                    text = "🎓 أبحاث ومشاريع التخرج",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onTertiaryContainer
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "تصفح أبحاث الدفعات وقم برفع مشروع تخرجك للتوثيق الأكاديمي.",
+                                    text = "تصفح أبحاث الدفعات السابقة ووثق مشروع تخرجك في الأرشيف الأكاديمي.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
                                 onClick = { showAddProjectDialog = true },
                                 shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -372,46 +492,53 @@ fun LibraryScreen(
                         OutlinedTextField(
                             value = projectSearchQuery,
                             onValueChange = onProjectSearchChange,
-                            placeholder = { Text("بحث عن أبحاث ومشاريع بالاسم أو الكلية...") },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                            placeholder = { Text("بحث عن أبحاث بالاسم أو الكلية...", fontSize = 12.sp) },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             trailingIcon = if (projectSearchQuery.isNotEmpty()) {
                                 {
                                     IconButton(onClick = { onProjectSearchChange("") }) {
-                                        Icon(Icons.Default.Close, contentDescription = "مسح")
+                                        Icon(Icons.Default.Close, contentDescription = "مسح", modifier = Modifier.size(18.dp))
                                     }
                                 }
                             } else null,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("project_search_field"),
-                            shape = RoundedCornerShape(16.dp)
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp)
                         )
 
                         // Year Filter Chips
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             items(listOf("الكل", "2026", "2025", "2024")) { yr ->
-                                FilterChip(
-                                    selected = (projectYearFilter == yr),
+                                val isSelected = (projectYearFilter == yr)
+                                Surface(
                                     onClick = { onProjectYearChange(yr) },
-                                    label = { Text(yr, fontSize = 11.sp) }
-                                )
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                ) {
+                                    Text(text = yr, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp))
+                                }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "أبحاث ومشاريع التخرج المميزة (${projects.size} مشروع):",
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "أبحاث ومشاريع التخرج الموثقة (${projects.size} مشروع):",
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
                         items(projects) { proj ->
                             val isFav = isFavorite(proj.id)
@@ -442,28 +569,43 @@ fun LibraryScreen(
                             it.description.contains(worldLibQuery, ignoreCase = true)
                 }
 
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                ) {
                     OutlinedTextField(
                         value = worldLibQuery,
                         onValueChange = { worldLibQuery = it },
-                        placeholder = { Text("بحث في المكتبات والقواعد العالمية...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        placeholder = { Text("بحث في المكتبات الرقمية والقواعد العالمية...", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                        trailingIcon = if (worldLibQuery.isNotEmpty()) {
+                            {
+                                IconButton(onClick = { worldLibQuery = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = "مسح", modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        } else null,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "المكتبات والمعارف الرقمية المتاحة (${filteredWorldLibs.size}):",
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "المكتبات الرقمية العالمية الشريكة (${filteredWorldLibs.size}):",
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
                         items(filteredWorldLibs) { lib ->
                             WorldLibraryCard(
                                 library = lib,
@@ -565,15 +707,16 @@ fun BookDetailCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(54.dp)
+                    .size(52.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
@@ -581,8 +724,8 @@ fun BookDetailCard(
                 Icon(
                     imageVector = Icons.Default.MenuBook,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(26.dp)
                 )
             }
 
@@ -629,7 +772,7 @@ fun BookDetailCard(
 
             IconButton(onClick = onToggleFav) {
                 Icon(
-                    imageVector = Icons.Default.Bookmark,
+                    imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                     contentDescription = "المفضلة",
                     tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline
                 )
@@ -647,24 +790,16 @@ fun BookReaderModalSheet(
     isFavorite: Boolean
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectedSheetTab by remember { mutableStateOf(0) } // 0: التفاصيل, 1: القارئ التفاعلي
-    var currentPage by remember { mutableStateOf(12) }
-    var fontSizeSp by remember { mutableStateOf(16) }
-    var readerThemeMode by remember { mutableStateOf(0) } // 0: Light, 1: Sepia, 2: Dark
+    var selectedSheetTab by remember { mutableIntStateOf(0) } // 0: التفاصيل, 1: القارئ التفاعلي
+    var currentPage by remember { mutableIntStateOf(12) }
+    var fontSizeSp by remember { mutableIntStateOf(16) }
+    var readerThemeMode by remember { mutableIntStateOf(0) } // 0: Light, 1: Sepia, 2: Dark
     var isBookmarkedPage by remember { mutableStateOf(false) }
-    var downloadProgress by remember { mutableStateOf(0f) }
+    var downloadProgress by remember { mutableFloatStateOf(0f) }
     var isDownloading by remember { mutableStateOf(false) }
     var isDownloaded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-
-    val chapters = listOf(
-        "المقدمة والأهداف الرئيسية",
-        "الفصل الأول: المفاهيم الأساسية",
-        "الفصل الثاني: التطبيقات والحلول البرمجية",
-        "الفصل الثالث: التحليل والمقارنة الميدانية",
-        "الخاتمة والمراجع العلمية"
-    )
 
     val readerBgColor = when (readerThemeMode) {
         1 -> Color(0xFFFBF0D9) // Sepia
@@ -713,7 +848,7 @@ fun BookReaderModalSheet(
                 Row {
                     IconButton(onClick = onToggleFavorite) {
                         Icon(
-                            imageVector = Icons.Default.Bookmark,
+                            imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = "مفضلة",
                             tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline
                         )
@@ -749,7 +884,7 @@ fun BookReaderModalSheet(
                 ) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
@@ -759,12 +894,12 @@ fun BookReaderModalSheet(
                                 Text("عدد الصفحات", style = MaterialTheme.typography.labelSmall)
                                 Text("${book.pages}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             }
-                            Divider(modifier = Modifier.height(30.dp).width(1.dp))
+                            HorizontalDivider(modifier = Modifier.height(30.dp).width(1.dp))
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("حجم الملف", style = MaterialTheme.typography.labelSmall)
                                 Text(book.fileSize, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             }
-                            Divider(modifier = Modifier.height(30.dp).width(1.dp))
+                            HorizontalDivider(modifier = Modifier.height(30.dp).width(1.dp))
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("التقييم", style = MaterialTheme.typography.labelSmall)
                                 Text("⭐ ${book.rating}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -787,7 +922,7 @@ fun BookReaderModalSheet(
                     if (isDownloading) {
                         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                             LinearProgressIndicator(
-                                progress = downloadProgress,
+                                progress = { downloadProgress },
                                 modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp))
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -992,9 +1127,10 @@ fun ProjectCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1016,14 +1152,14 @@ fun ProjectCard(
 
                 IconButton(onClick = onToggleFav, modifier = Modifier.size(28.dp)) {
                     Icon(
-                        imageVector = Icons.Default.Bookmark,
+                        imageVector = if (isFavorite) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                         contentDescription = "مفضلة",
                         tint = if (isFavorite) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = project.title,
@@ -1175,15 +1311,16 @@ fun WorldLibraryCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(46.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.tertiaryContainer),
                 contentAlignment = Alignment.Center
@@ -1191,7 +1328,7 @@ fun WorldLibraryCard(
                 Icon(Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
