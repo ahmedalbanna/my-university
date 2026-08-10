@@ -401,9 +401,40 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private val _userProjects = MutableStateFlow<List<Project>>(emptyList())
+    val userProjects: StateFlow<List<Project>> = _userProjects.asStateFlow()
+
+    fun addNewProject(
+        title: String,
+        studentName: String,
+        supervisor: String,
+        faculty: String,
+        year: String,
+        level: Int,
+        summary: String,
+        tags: List<String>
+    ) {
+        val newProj = Project(
+            id = "proj_${System.currentTimeMillis()}",
+            title = title,
+            studentName = studentName,
+            supervisor = supervisor,
+            faculty = faculty,
+            year = year,
+            level = level,
+            summary = summary,
+            tags = tags,
+            fileFormat = "PDF",
+            fileSize = "5.1 MB",
+            downloadsCount = 1
+        )
+        _userProjects.value = _userProjects.value + newProj
+    }
+
     // Researches & Projects filtered
     fun getFilteredProjects(): List<Project> {
-        return repository.getProjects().filter { proj ->
+        val allProjects = repository.getProjects() + _userProjects.value
+        return allProjects.filter { proj ->
             val matchFaculty = (_selectedFaculty.value == "الكل" || proj.faculty == _selectedFaculty.value)
             val matchYear = (_projectYearFilter.value == "الكل" || proj.year == _projectYearFilter.value)
             val matchSearch = _projectSearchQuery.value.isEmpty() ||

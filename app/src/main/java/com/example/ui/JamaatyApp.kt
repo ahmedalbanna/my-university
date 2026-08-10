@@ -219,6 +219,7 @@ fun JamaatyApp(
                                 faculties = viewModel.getFaculties(),
                                 books = viewModel.getFilteredBooks(),
                                 projects = viewModel.getFilteredProjects(),
+                                worldLibraries = viewModel.getWorldLibraries(),
                                 bookSearchQuery = bookQuery,
                                 projectSearchQuery = projectQuery,
                                 projectYearFilter = projectYear,
@@ -231,7 +232,10 @@ fun JamaatyApp(
                                 onToggleFavorite = { id, type, title, sub, fac ->
                                     viewModel.toggleFavorite(id, type, title, sub, fac)
                                 },
-                                isFavorite = { id -> favorites.any { it.id == id } }
+                                isFavorite = { id -> favorites.any { it.id == id } },
+                                onAddNewProject = { title, student, supervisor, faculty, year, level, summary, tags ->
+                                    viewModel.addNewProject(title, student, supervisor, faculty, year, level, summary, tags)
+                                }
                             )
                         }
                         BottomTab.Exams -> {
