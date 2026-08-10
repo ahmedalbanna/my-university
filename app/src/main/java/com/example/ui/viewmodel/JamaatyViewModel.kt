@@ -17,6 +17,8 @@ import com.example.data.model.Question
 import com.example.data.model.StudentProfile
 import com.example.data.model.VocabularyCard
 import com.example.data.model.WorldLibrary
+import android.media.RingtoneManager
+import android.net.Uri
 import com.example.data.repository.JamaatyRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -541,6 +543,17 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                 isRead = false
             )
             repository.addNotification(notif)
+            playNotificationSound()
+        }
+    }
+
+    private fun playNotificationSound() {
+        try {
+            val notification: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val r = RingtoneManager.getRingtone(getApplication(), notification)
+            r.play()
+        } catch (e: Exception) {
+            // Log or handle error if sound cannot be played
         }
     }
 
@@ -597,6 +610,7 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             // For demo: increment unread if chat was hidden (handled in UI usually)
             // But here we'll just increment to show the badge functionality
             _unreadAiMessagesCount.value += 1
+            playNotificationSound()
         }
     }
 
