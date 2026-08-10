@@ -289,7 +289,8 @@ fun JamaatyApp(
             AiChatDialog(
                 messages = chatMessages,
                 onSendMessage = { text -> viewModel.sendChatMessage(text) },
-                onDismiss = { showAiChatSheet = false }
+                onDismiss = { showAiChatSheet = false },
+                onClearChat = { viewModel.clearChat() }
             )
         }
 

@@ -585,7 +585,7 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         _chatMessages.value = current
 
         viewModelScope.launch {
-            kotlinx.coroutines.delay(800)
+            kotlinx.coroutines.delay(1200) // Simulate thinking
             val aiResponse = generateAiResponse(userText)
             val updated = _chatMessages.value.toMutableList()
             updated.add(ChatMessage("JAMAATY_AI", aiResponse))
@@ -593,18 +593,31 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun clearChat() {
+        _chatMessages.value = listOf(
+            ChatMessage("JAMAATY_AI", "مرحباً بك مجدداً! كيف يمكنني مساعدتك الآن؟")
+        )
+    }
+
     private fun generateAiResponse(query: String): String {
         return when {
             query.contains("سعر", ignoreCase = true) || query.contains("رسوم", ignoreCase = true) ->
                 "يمكنك تسديد الرسوم الدراسية أو رسوم السكن والساعات من خلال قسم 'محفظتي والخدمات المالية'. تتوفر طرق دفع سريعة عبر الكريمي، البطاقات المصرفية والمحافظ الرقمية اليمنيّة."
-            query.contains("كتاب", ignoreCase = true) || query.contains("مرجع", ignoreCase = true) ->
-                "تتوفر جميع كتب المناهج الدراسية للترم الأول والثاني في قسم 'المكتبة والمستوى الدراسي'. يمكنك اختيار مستواك (من 1 إلى 5) وتنزيل المراجع مباشرة!"
+            query.contains("كتاب", ignoreCase = true) || query.contains("مرجع", ignoreCase = true) || query.contains("ترم", ignoreCase = true) ->
+                "أهلاً بك! يمكنك الوصول لجميع المراجع والكتب المقررة لمستواك الدراسي من خلال قسم 'المكتبة الرقمية' في القائمة الجانبية. هل تبحث عن كتاب محدد؟"
             query.contains("اختبار", ignoreCase = true) || query.contains("امتحان", ignoreCase = true) ->
-                "منصة الاختبارات في قسم 'نماذج الاختبارات' تحتوي على بنك أسئلة تفاعلي مع حلول مفصلة وسجل المراجعة والتحديثات التاريخية للأسئلة لجامعات اليمن."
+                "ستجد نماذج الاختبارات السابقة والتمارين في قسم 'بنك الاختبارات'. نوصي بمراجعة اختبارات العام الماضي للتحضير بشكل أفضل."
+            query.contains("جدول", ignoreCase = true) ->
+                "يمكنك عرض جدولك الدراسي الأسبوعي ومواعيد المحاضرات من خلال تبويب 'الجدول' في الشاشة الرئيسية."
+            query.contains("معدل", ignoreCase = true) || query.contains("gpa", ignoreCase = true) ->
+                "لحساب معدلك التراكمي وتوقع نتائجك، استخدم 'حاسبة المعدل' الموجودة في قسم المحفظة."
+            query.contains("تخرج", ignoreCase = true) ->
+                "شروط التخرج تشمل إكمال جميع الساعات المعتمدة بنجاح، وتقديم مشروع التخرج، وإخلاء الطرف من المكتبة والشؤون المالية. يمكنك مراجعة حالتك الأكاديمية في قسم 'ملفي الشخصي'."
+            query.contains("سلام", ignoreCase = true) || query.contains("مرحبا", ignoreCase = true) || query.contains("هلا", ignoreCase = true) ->
+                "وعليكم السلام ورحمة الله! أهلاً بك في تطبيق جامعتي. أنا هنا لمساعدتك في كل ما يخص حياتك الجامعية. ماذا تريد أن تعرف؟"
             query.contains("بحث", ignoreCase = true) || query.contains("مشروع", ignoreCase = true) ->
                 "يمكنك استعراض أبحاث ومشاريع التخرج السابقة من قسم الأبحاث والمشاريع، وتصفيتها حسب السنة والكلية لقراءة التحليل وتنزيل الملحقات."
-            else ->
-                "أنا هنا لمساعدتك! يمكنك الاستفسار عن المناهج، الرسوم، بنك الأسئلة، أو ترجمة المصطلحات الأكاديمية الصعبة."
+            else -> "عذراً، لم أفهم استفسارك تماماً. يمكنك سؤالي عن الرسوم، الجداول الدراسية، الكتب والمراجع، أو كيفية حساب المعدل التراكمي."
         }
     }
 }
