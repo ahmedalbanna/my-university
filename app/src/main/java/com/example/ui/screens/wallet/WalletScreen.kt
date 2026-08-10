@@ -2,76 +2,32 @@ package com.example.ui.screens.wallet
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Payment
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.ReceiptLong
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.entities.PaymentEntity
@@ -85,7 +41,7 @@ fun WalletScreen(
     payments: List<PaymentEntity>,
     onProcessPayment: (String, String, Double, String) -> Unit
 ) {
-    var activeTab by remember { mutableStateOf(0) } // 0: تسديد الرسوم, 1: النفقة الخاصة والاتصالات, 2: سجل الفواتير
+    var activeTab by remember { mutableIntStateOf(0) } // 0: تسديد الرسوم, 1: النفقة الخاصة والاتصالات, 2: سجل الفواتير
     var showPaymentModal by remember { mutableStateOf(false) }
     var selectedServiceForPay by remember { mutableStateOf<Pair<String, Double>?>(null) }
     var showStudentCard by remember { mutableStateOf(false) }
@@ -104,171 +60,265 @@ fun WalletScreen(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+                .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 8.dp),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.AccountBalanceWallet,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.88f)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "محفظتي والخدمات المالية الطلابية",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White.copy(alpha = 0.9f)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "الرصيد الإلكتروني المتاح:",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.75f)
                         )
-                        Text(
-                            text = "${String.format("%,.0f", profile.balance)} ر.ي",
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Surface(
-                            onClick = {
-                                selectedServiceForPay = Pair("شحن رصيد المحفظة الطلابية", 10000.0)
-                                showPaymentModal = true
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.secondary,
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "شحن المحفظة", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Surface(
-                            onClick = { showStudentCard = !showStudentCard },
-                            shape = RoundedCornerShape(12.dp),
-                            color = Color.White.copy(alpha = 0.2f),
-                            contentColor = Color.White
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
+                    )
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    // Header Title & Balance Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White.copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountBalanceWallet,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = if (showStudentCard) "إخفاء البطاقة" else "بطاقتي الرقمية",
-                                    fontSize = 11.sp,
+                                    text = "محفظتي والخدمات المالية الطلابية",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Color.White.copy(alpha = 0.95f),
                                     fontWeight = FontWeight.Bold
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "الرصيد الإلكتروني المتاح:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.75f)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(
+                                    text = String.format("%,.0f", profile.balance),
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "ر.ي",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                            }
+                        }
+
+                        // Right Top Action Buttons
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Surface(
+                                onClick = {
+                                    selectedServiceForPay = Pair("شحن رصيد المحفظة الطلابية", 10000.0)
+                                    showPaymentModal = true
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary,
+                                shadowElevation = 2.dp
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(text = "شحن المحفظة", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            Surface(
+                                onClick = { showStudentCard = !showStudentCard },
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color.White.copy(alpha = 0.22f),
+                                contentColor = Color.White
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = if (showStudentCard) Icons.Default.CreditCard else Icons.Default.Badge,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (showStudentCard) "إخفاء البطاقة" else "بطاقتي الرقمية",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                // Quick Financial Action Chips
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        onClick = {
-                            Toast.makeText(context, "جاري تصدير كشف الحساب المالي كـ PDF...", Toast.LENGTH_LONG).show()
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color.White.copy(alpha = 0.15f),
-                        contentColor = Color.White,
-                        modifier = Modifier.weight(1f)
+                    // Quick Financial Action Chips Bar
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            onClick = {
+                                Toast.makeText(context, "جاري تصدير كشف الحساب المالي كـ PDF...", Toast.LENGTH_LONG).show()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color.White.copy(alpha = 0.16f),
+                            contentColor = Color.White,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("كشف حساب", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("كشف حساب", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
                         }
-                    }
 
-                    Surface(
-                        onClick = {
-                            Toast.makeText(context, "ميزة تحويل الرصيد لزميل متوفرة قريباً عبر التطبيق", Toast.LENGTH_SHORT).show()
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color.White.copy(alpha = 0.15f),
-                        contentColor = Color.White,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            onClick = {
+                                Toast.makeText(context, "ميزة تحويل الرصيد لزميل متوفرة قريباً عبر التطبيق", Toast.LENGTH_SHORT).show()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color.White.copy(alpha = 0.16f),
+                            contentColor = Color.White,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("تحويل رصيد", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("تحويل رصيد", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+
+                        Surface(
+                            onClick = {
+                                Toast.makeText(context, "رمز QR الخاص برقمك الجامعي جاهز للمسح", Toast.LENGTH_SHORT).show()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color.White.copy(alpha = 0.16f),
+                            contentColor = Color.White,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.QrCode, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("رمز QR", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
                 }
             }
         }
 
-        // Expandable Digital Student Card
-        AnimatedVisibility(visible = showStudentCard) {
-            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+        // Expandable Digital Student Card Widget
+        AnimatedVisibility(
+            visible = showStudentCard,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                 DigitalStudentCard(profile = profile)
             }
         }
 
-        // Navigation SubTabs
-        SecondaryTabRow(
-            selectedTabIndex = activeTab,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
+        // Custom Mode Switcher Navigation SubTabs Bar
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
-            Tab(
-                selected = activeTab == 0,
-                onClick = { activeTab = 0 },
-                text = { Text("تسديد الرسوم", fontWeight = if (activeTab == 0) FontWeight.Bold else FontWeight.Normal) }
-            )
-            Tab(
-                selected = activeTab == 1,
-                onClick = { activeTab = 1 },
-                text = { Text("نفقة خاصة واتصالات", fontWeight = if (activeTab == 1) FontWeight.Bold else FontWeight.Normal) }
-            )
-            Tab(
-                selected = activeTab == 2,
-                onClick = { activeTab = 2 },
-                text = { Text("سجل الفواتير (${payments.size})", fontWeight = if (activeTab == 2) FontWeight.Bold else FontWeight.Normal) }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val tabs = listOf(
+                    0 to "💳 تسديد الرسوم",
+                    1 to "📱 النفقة والاتصالات",
+                    2 to "🧾 الفواتير (${payments.size})"
+                )
+
+                tabs.forEach { (index, title) ->
+                    val isSelected = activeTab == index
+                    Surface(
+                        onClick = { activeTab = index },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = title,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
+        // Tab Content Pages
         when (activeTab) {
             0 -> {
                 // TUITION FEES PAYMENT FLOW
@@ -276,64 +326,114 @@ fun WalletScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     item {
-                        // Summary Card for Fees
+                        // Summary Card for Academic Fees Status
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+                            shape = RoundedCornerShape(18.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
                         ) {
-                            Row(
-                                modifier = Modifier.padding(14.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "حالة الرسوم الدراسية القائمة",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                    Text(
-                                        text = "إجمالي الرسوم المتبقية: 265,000 ر.ي",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.error,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "حالة الرسوم الدراسية القائمة 🎓",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "إجمالي الرسوم المتبقية: 265,000 ر.ي",
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.error,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                    ) {
+                                        Text(
+                                            text = "الفصل الثاني 2026",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                        )
+                                    }
                                 }
 
-                                Surface(
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = MaterialTheme.colorScheme.primary
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                // Progress Indicator for Paid Fees vs Due
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "الفصل الدراسي الثاني 2026",
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        text = "نسبة المسدد: 49%",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "المسدد: 258,000 / 523,000 ر.ي",
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                LinearProgressIndicator(
+                                    progress = { 0.49f },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .clip(RoundedCornerShape(4.dp)),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
                             }
                         }
                     }
 
                     item {
-                        // Status Filters
+                        // Filter Chips for Fees Status
                         Row(
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "تصفية:", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            listOf("ALL" to "الكل", "DUE" to "المستحقة ⚠️", "PAID" to "المسددة ✓").forEach { (filterKey, label) ->
+                            Text(
+                                text = "تصفية الرسوم:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            listOf(
+                                "ALL" to "الكل",
+                                "DUE" to "المستحقة ⚠️",
+                                "PAID" to "المسددة ✓"
+                            ).forEach { (filterKey, label) ->
                                 val isSelected = feeFilter == filterKey
                                 Surface(
                                     onClick = { feeFilter = filterKey },
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = RoundedCornerShape(14.dp),
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                                    border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                    border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                 ) {
                                     Text(
                                         text = label,
@@ -409,24 +509,62 @@ fun WalletScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     item {
-                        Text(
-                            text = "خدمات الاتصالات والباقات والنفقة الخاصة:",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.secondary),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Wifi,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "الخدمات الطلابية المميزة والنفقة الخاصة 📶",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "باقات إنترنت مخفضة، تقوية أكاديمية، وكوبونات خدمات جامعية",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     item {
                         TelecomServiceCard(
                             title = "باقة الاتصالات الطلابية الشاملة (50GB + مكالمات)",
                             price = 5500.0,
+                            icon = Icons.Default.PhoneAndroid,
                             features = listOf(
                                 "50 جيجابايت إنترنت سريع للمناهج والأبحاث",
                                 "تصفح مجاني مفتوح لموقع الجامعة والمكتبة الرقمية",
-                                "تجديد شهري تلقائي وتغطية ممتازة"
+                                "تجديد شهري تلقائي وتغطية ممتازة داخل الحرم الجامعي"
                             ),
                             onSubscribe = {
                                 selectedServiceForPay = Pair("باقة الاتصالات الطلابية 50GB", 5500.0)
@@ -439,9 +577,10 @@ fun WalletScreen(
                         TelecomServiceCard(
                             title = "خدمة المتابعة والدروس الخاصة (نفقة خاصة)",
                             price = 12000.0,
+                            icon = Icons.Default.School,
                             features = listOf(
                                 "جلسات تقوية فردية مع معيدين وأساتذة معتمدين",
-                                "مراجعة وإشراف مباشر على مشروعات التخرج",
+                                "مراجعة وإشراف مباشر على مشروعات التخرج والأبحاث",
                                 "بث مباشر وتطبيقات عملي عبر المنصة"
                             ),
                             onSubscribe = {
@@ -455,6 +594,7 @@ fun WalletScreen(
                         TelecomServiceCard(
                             title = "كوبونات التغذية والطباعة الجامعية",
                             price = 3000.0,
+                            icon = Icons.Default.Print,
                             features = listOf(
                                 "رصيد طباعة وتصوير 150 صفحة بمطبعة الكلية",
                                 "خصم 20% بوجبات مطعم السكن الجامعي",
@@ -482,14 +622,17 @@ fun WalletScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     item {
                         OutlinedTextField(
                             value = receiptSearchQuery,
                             onValueChange = { receiptSearchQuery = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("بحث في الفواتير أو برقم العملية TXN...", fontSize = 13.sp) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("receipt_search_input"),
+                            placeholder = { Text("بحث في الفواتير أو برقم العملية TXN...", fontSize = 12.sp) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             trailingIcon = {
                                 if (receiptSearchQuery.isNotEmpty()) {
@@ -499,7 +642,7 @@ fun WalletScreen(
                                 }
                             },
                             singleLine = true,
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                     }
 
@@ -518,7 +661,7 @@ fun WalletScreen(
                                 text = "انقر المعاملة للعين والطباعة",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -528,20 +671,35 @@ fun WalletScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 32.dp),
+                                    .padding(vertical = 36.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.Default.ReceiptLong,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(48.dp),
-                                        tint = MaterialTheme.colorScheme.outline
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .size(64.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ReceiptLong,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(32.dp),
+                                            tint = MaterialTheme.colorScheme.outline
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
                                     Text(
                                         text = "لا توجد فواتير أو عمليات سداد مسجلة حالياً",
                                         fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "تأكد من اختيار التصفية الصحيحة أو قم بإجراء عملية سداد جديدة",
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -600,7 +758,8 @@ fun FeeItemCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -610,29 +769,40 @@ fun FeeItemCard(
             Column(modifier = Modifier.weight(1f)) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    color = if (isPaid) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 6.dp)
                 ) {
                     Text(
                         text = category,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        color = if (isPaid) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
 
                 Text(
                     text = title,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = "تاريخ الاستحقاق: $dueDate",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "تاريخ الاستحقاق: $dueDate",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "${String.format("%,.0f", amount)} ر.ي",
                     fontWeight = FontWeight.Black,
@@ -641,26 +811,45 @@ fun FeeItemCard(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             if (isPaid) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF4CAF50).copy(alpha = 0.15f))
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFF4CAF50).copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, Color(0xFF4CAF50).copy(alpha = 0.3f))
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Verified, contentDescription = null, tint = Color(0xFF2E7D32), modifier = Modifier.size(16.dp))
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Verified,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(16.dp)
+                        )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "تم السداد ✓", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(
+                            text = "تم السداد ✓",
+                            color = Color(0xFF2E7D32),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
                     }
                 }
             } else {
                 Button(
                     onClick = onPayNow,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.Payment,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text("تسديد الآن", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
@@ -672,6 +861,7 @@ fun FeeItemCard(
 fun TelecomServiceCard(
     title: String,
     price: Double,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     features: List<String>,
     onSubscribe: () -> Unit
 ) {
@@ -679,7 +869,8 @@ fun TelecomServiceCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -690,13 +881,13 @@ fun TelecomServiceCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(38.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            Icons.Default.PhoneAndroid,
+                            imageVector = icon,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.size(20.dp)
@@ -706,19 +897,35 @@ fun TelecomServiceCard(
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             features.forEach { feat ->
-                Text(
-                    text = "• $feat",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier.padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .padding(top = 2.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = feat,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -728,16 +935,28 @@ fun TelecomServiceCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${String.format("%,.0f", price)} ر.ي",
-                    fontWeight = FontWeight.Black,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = String.format("%,.0f", price),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "ر.ي",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                }
 
                 Button(
                     onClick = onSubscribe,
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Text("اشتراك / دفع الآن", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
@@ -755,9 +974,10 @@ fun PaymentReceiptCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -770,7 +990,7 @@ fun PaymentReceiptCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
@@ -779,7 +999,7 @@ fun PaymentReceiptCard(
                         imageVector = Icons.Default.Receipt,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
@@ -789,18 +1009,21 @@ fun PaymentReceiptCard(
                     Text(
                         text = payment.title,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "TXN: ${payment.referenceNo} • ${payment.date}",
                         fontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(1.dp))
                     Text(
                         text = "طريقة الدفع: ${payment.paymentMethod}",
                         fontSize = 10.sp,
                         color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -808,12 +1031,13 @@ fun PaymentReceiptCard(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "${String.format("%,.0f", payment.amount)} ${payment.currency}",
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Black,
                     fontSize = 15.sp,
                     color = Color(0xFF2E7D32)
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Surface(
-                    shape = RoundedCornerShape(4.dp),
+                    shape = RoundedCornerShape(6.dp),
                     color = Color(0xFF4CAF50).copy(alpha = 0.15f)
                 ) {
                     Text(
@@ -821,7 +1045,7 @@ fun PaymentReceiptCard(
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2E7D32),
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
             }
@@ -838,7 +1062,7 @@ fun PaymentModalBottomSheet(
     onDismiss: () -> Unit,
     onConfirmPayment: (String) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedMethod by remember { mutableStateOf("المحفظة الطلابية الرقمية") }
 
     ModalBottomSheet(
@@ -848,7 +1072,7 @@ fun PaymentModalBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 24.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -856,25 +1080,45 @@ fun PaymentModalBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Payment, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "تأكيد بوابات الدفع الإلكتروني", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Payment,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "تأكيد بوابات الدفع الإلكتروني",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = null) }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "إغلاق")
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Text(text = "الخدمة المطلوبة:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(text = title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "المبلغ الإجمالي:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = title, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = "المبلغ الإجمالي المطلوب:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
                         text = "${String.format("%,.0f", amount)} ر.ي",
                         fontSize = 22.sp,
@@ -886,7 +1130,7 @@ fun PaymentModalBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "اختر وسيلة الدفع المعتمدة:", fontWeight = FontWeight.Bold)
+            Text(text = "اختر وسيلة الدفع المعتمدة:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -903,7 +1147,7 @@ fun PaymentModalBottomSheet(
                     onClick = { selectedMethod = methodName },
                     shape = RoundedCornerShape(12.dp),
                     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                    border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
@@ -928,10 +1172,15 @@ fun PaymentModalBottomSheet(
 
             Button(
                 onClick = { onConfirmPayment(selectedMethod) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("confirm_payment_button"),
+                shape = RoundedCornerShape(14.dp),
+                contentPadding = PaddingValues(vertical = 12.dp)
             ) {
-                Text("تأكيد واعتماد الدفع الإلكتروني الآن", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 4.dp))
+                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("تأكيد واعتماد الدفع الإلكتروني الآن", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     }
@@ -944,7 +1193,7 @@ fun ReceiptDetailModalBottomSheet(
     profile: StudentProfile,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
 
     ModalBottomSheet(
@@ -954,7 +1203,7 @@ fun ReceiptDetailModalBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -962,18 +1211,18 @@ fun ReceiptDetailModalBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "إيصال سداد إلكتروني رسمـي", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = null) }
+                Text(text = "إيصال سداد إلكتروني رسمـي 📄", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = "إغلاق") }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Printable Card Visual
+            // Printable Voucher Card Visual
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -994,6 +1243,8 @@ fun ReceiptDetailModalBottomSheet(
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
                         text = payment.title,
@@ -1028,21 +1279,23 @@ fun ReceiptDetailModalBottomSheet(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // QR Code visual placeholder
+                    // QR Code visual placeholder box
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(8.dp))
+                            .background(Color.White, RoundedCornerShape(10.dp))
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(10.dp))
                             .padding(8.dp)
                     ) {
                         Icon(Icons.Default.QrCode, contentDescription = null, modifier = Modifier.size(36.dp), tint = Color.Black)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "رمز التحقق الإلكتروني للعملية المعتمدة\nQR Reference: ${payment.referenceNo}",
                             fontSize = 10.sp,
-                            color = Color.DarkGray
+                            color = Color.DarkGray,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
