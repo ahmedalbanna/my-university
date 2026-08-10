@@ -22,19 +22,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -79,110 +76,104 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
-            .padding(bottom = 24.dp)
+            .padding(bottom = 32.dp)
             .testTag("home_screen_root")
     ) {
-        // Hero Banner Image
-        Image(
-            painter = painterResource(id = R.drawable.home_hero_banner_1786312069086),
-            contentDescription = "جامعتي",
+        // Welcoming Hero Banner Card
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp),
-            contentScale = ContentScale.Crop
-        )
-
-        // Welcoming Hero Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primaryContainer
-                        )
-                    )
-                )
-                .padding(20.dp)
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "أهلاً بك في منصة جامعتي 🏛️",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = profile.name,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "${profile.faculty} • ${profile.major}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondary),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${profile.gpa}",
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Academic Level Switcher (Levels 1 to 5)
-                Text(
-                    text = "اختر المستوى الدراسي (1 إلى 5):",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.White.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.Bold
+            Box {
+                // Background Image
+                Image(
+                    painter = painterResource(id = R.drawable.home_hero_banner_1786312069086),
+                    contentDescription = "جامعتي",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                // Dark Gradient Overlay for readability
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.25f),
+                                    Color.Black.copy(alpha = 0.85f)
+                                )
+                            )
+                        )
+                )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Header Info Content
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .align(Alignment.BottomStart)
                 ) {
-                    (1..5).forEach { level ->
-                        val isSelected = (level == selectedLevel)
-                        Surface(
-                            onClick = { onSelectLevel(level) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.secondary else Color.White.copy(alpha = 0.2f),
-                            contentColor = if (isSelected) Color.White else Color.White,
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("level_chip_$level")
-                        ) {
-                            Box(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
                             ) {
                                 Text(
-                                    text = "مستوى $level",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
+                                    text = "🏛️ البوابة الأكاديمية الرسمية",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "مرحباً، ${profile.name}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+
+                            Text(
+                                text = "${profile.university} • ${profile.major}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.85f)
+                            )
+                        }
+
+                        // GPA Badge
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.White.copy(alpha = 0.2f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.4f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "المعدل",
+                                    fontSize = 10.sp,
+                                    color = Color.White.copy(alpha = 0.8f)
+                                )
+                                Text(
+                                    text = "${profile.gpa}",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White,
+                                    fontSize = 17.sp
                                 )
                             }
                         }
@@ -191,9 +182,57 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Academic Level Selector Chips
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "🎯 اختر المستوى الدراسي الحالي:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
-        // Quick Stats Row
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                (1..5).forEach { level ->
+                    val isSelected = (level == selectedLevel)
+                    Surface(
+                        onClick = { onSelectLevel(level) },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("level_chip_$level")
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "مستوى $level",
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Quick Academic Access Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -201,8 +240,8 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HomeStatCard(
-                title = "المقرات الدراسية",
-                value = "تتبع التقدم",
+                title = "المقررات الدراسية",
+                value = "تتبع خطتك",
                 icon = Icons.Default.School,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f),
@@ -210,7 +249,7 @@ fun HomeScreen(
             )
             HomeStatCard(
                 title = "بنك الأسئلة",
-                value = "نماذج محلولة",
+                value = "حل النماذج",
                 icon = Icons.Default.Assignment,
                 color = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.weight(1f),
@@ -226,23 +265,9 @@ fun HomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Section: Digital Student Card Preview
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Text(
-                text = "💳 بطاقتك الجامعية الرقمية",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            DigitalStudentCard(profile = profile)
-        }
-
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Section: Today's Schedule Preview
+        // Today's Lecture Schedule Preview
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -250,7 +275,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "📅 جدول محاضرات اليوم",
+                    text = "📅 محاضرة اليوم القادمة",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -263,16 +288,17 @@ fun HomeScreen(
                     modifier = Modifier.clickable { onNavigateToSchedule() }
                 )
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onNavigateToSchedule() },
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -280,16 +306,21 @@ fun HomeScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(46.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = Color.White)
+                        Icon(
+                            Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "خوارزميات وتراكيب البيانات",
@@ -297,14 +328,14 @@ fun HomeScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "08:00 - 10:00 • د. صادق الشراجي",
+                            text = "08:00 ص - 10:00 ص • القاعة 402 • د. صادق الشراجي",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    
+
                     Icon(
-                        Icons.Default.ArrowForward,
+                        Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
@@ -315,7 +346,21 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Section: Featured Textbooks for Level
+        // Digital Student Card Preview
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                text = "💳 البطاقة الجامعية الرقمية",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            DigitalStudentCard(profile = profile)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Recommended Textbooks Horizontal Carousel
         Column {
             Row(
                 modifier = Modifier
@@ -325,13 +370,13 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "📚 الكتب الموصى بها للمستوى $selectedLevel",
+                    text = "📚 مراجع موصى بها (المستوى $selectedLevel)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "عرض الكل",
+                    text = "المكتبة الكاملة",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
@@ -366,10 +411,10 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Section: Quick Access Grid Options
+        // Fast Tools Row
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
-                text = "🚀 الخدمات الأكاديمية السريعة",
+                text = "🚀 أدوات وأدوات مساعدة سريعة",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -383,7 +428,7 @@ fun HomeScreen(
             ) {
                 QuickActionBanner(
                     title = "جدول المحاضرات",
-                    subtitle = "متابعة أسبوعية",
+                    subtitle = "التنظيم الأسبوعي",
                     icon = Icons.Default.CalendarMonth,
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -393,7 +438,7 @@ fun HomeScreen(
 
                 QuickActionBanner(
                     title = "مترجم المناهج",
-                    subtitle = "ترجمة ومصطلحات",
+                    subtitle = "قاموس ومصطلحات",
                     icon = Icons.Default.Translate,
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -417,34 +462,36 @@ fun HomeStatCard(
     Card(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(color.copy(alpha = 0.15f)),
+                    .background(color.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleSmall,
@@ -466,7 +513,8 @@ fun BookHomeCard(
         modifier = modifier.width(200.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -613,3 +661,4 @@ fun QuickActionBanner(
         }
     }
 }
+
