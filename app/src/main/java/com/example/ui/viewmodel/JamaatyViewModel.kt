@@ -9,6 +9,7 @@ import com.example.data.local.entities.NotificationEntity
 import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.SemesterEntity
 import com.example.data.local.entities.CourseEntity
+import com.example.data.local.entities.ScheduleEntity
 import com.example.data.model.Book
 import com.example.data.model.ExamResult
 import com.example.data.model.Project
@@ -73,18 +74,18 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                     status = "PAID",
                     date = "2026-01-10",
                     referenceNo = "TXN-8841290",
-                    paymentMethod = "بطاقة مدى / Mada"
+                    paymentMethod = "محفظة الكريمي / كاش"
                 )
             )
             repository.addPayment(
                 PaymentEntity(
                     title = "اشتراك باقة الطلاب للاتصالات 50GB",
                     category = "TELECOM",
-                    amount = 120.0,
+                    amount = 5000.0,
                     status = "PAID",
                     date = "2026-02-01",
                     referenceNo = "TXN-9931002",
-                    paymentMethod = "المحفظة الرقمية"
+                    paymentMethod = "محفظة جوالي"
                 )
             )
         }
@@ -120,6 +121,52 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                         type = "LIBRARY"
                     )
                 )
+            }
+        }
+
+        // Seed initial schedule if empty
+        viewModelScope.launch {
+            val current = repository.schedules.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList()).value
+            if (current.isEmpty()) {
+                val sampleSchedules = listOf(
+                    ScheduleEntity(
+                        dayOfWeek = "الأحد",
+                        subject = "خوارزميات وتراكيب البيانات",
+                        doctor = "د. صادق الشراجي",
+                        startTime = "08:00",
+                        endTime = "10:00",
+                        room = "قاعة 402",
+                        color = 0xFF6200EE.toInt()
+                    ),
+                    ScheduleEntity(
+                        dayOfWeek = "الأحد",
+                        subject = "هندسة البرمجيات",
+                        doctor = "د. وليد البعداني",
+                        startTime = "10:30",
+                        endTime = "12:30",
+                        room = "معمل 5",
+                        color = 0xFF03DAC6.toInt()
+                    ),
+                    ScheduleEntity(
+                        dayOfWeek = "الأثنين",
+                        subject = "قواعد البيانات",
+                        doctor = "د. محمد العمراني",
+                        startTime = "09:00",
+                        endTime = "11:00",
+                        room = "قاعة 201",
+                        color = 0xFFFFAB00.toInt()
+                    ),
+                    ScheduleEntity(
+                        dayOfWeek = "الأربعاء",
+                        subject = "الأمن السيبراني",
+                        doctor = "د. خليل المعمري",
+                        startTime = "08:00",
+                        endTime = "10:30",
+                        room = "قاعة التشريفات",
+                        color = 0xFFD81B60.toInt()
+                    )
+                )
+                sampleSchedules.forEach { repository.addSchedule(it) }
             }
         }
     }
@@ -226,6 +273,32 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
 
     val unreadNotificationsCount: StateFlow<Int> = repository.unreadNotificationsCount
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    // Schedule
+    val schedules: StateFlow<List<ScheduleEntity>> = repository.schedules
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addSchedule(subject: String, day: String, start: String, end: String, room: String, doctor: String, color: Int) {
+        viewModelScope.launch {
+            repository.addSchedule(
+                ScheduleEntity(
+                    subject = subject,
+                    dayOfWeek = day,
+                    startTime = start,
+                    endTime = end,
+                    room = room,
+                    doctor = doctor,
+                    color = color
+                )
+            )
+        }
+    }
+
+    fun deleteSchedule(schedule: ScheduleEntity) {
+        viewModelScope.launch {
+            repository.deleteSchedule(schedule)
+        }
+    }
     
     // Academic / GPA
     val semesters: StateFlow<List<SemesterEntity>> = repository.semesters
@@ -470,11 +543,11 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     private fun generateAiResponse(query: String): String {
         return when {
             query.contains("سعر", ignoreCase = true) || query.contains("رسوم", ignoreCase = true) ->
-                "يمكنك تسديد الرسوم الدراسية أو رسوم السكن والساعات من خلال قسم 'محفظتي والخدمات المالية'. تتوفر طرق دفع سريعة عبر مدى، البطاقات الائتمانية والمحفظة الرقمية."
+                "يمكنك تسديد الرسوم الدراسية أو رسوم السكن والساعات من خلال قسم 'محفظتي والخدمات المالية'. تتوفر طرق دفع سريعة عبر الكريمي، البطاقات المصرفية والمحافظ الرقمية اليمنيّة."
             query.contains("كتاب", ignoreCase = true) || query.contains("مرجع", ignoreCase = true) ->
                 "تتوفر جميع كتب المناهج الدراسية للترم الأول والثاني في قسم 'المكتبة والمستوى الدراسي'. يمكنك اختيار مستواك (من 1 إلى 5) وتنزيل المراجع مباشرة!"
             query.contains("اختبار", ignoreCase = true) || query.contains("امتحان", ignoreCase = true) ->
-                "منصة الاختبارات في قسم 'نماذج الاختبارات' تحتوي على بنك أسئلة تفاعلي مع حلول مفصلة وسجل المراجعة والتحديثات التاريخية للأسئلة."
+                "منصة الاختبارات في قسم 'نماذج الاختبارات' تحتوي على بنك أسئلة تفاعلي مع حلول مفصلة وسجل المراجعة والتحديثات التاريخية للأسئلة لجامعات اليمن."
             query.contains("بحث", ignoreCase = true) || query.contains("مشروع", ignoreCase = true) ->
                 "يمكنك استعراض أبحاث ومشاريع التخرج السابقة من قسم الأبحاث والمشاريع، وتصفيتها حسب السنة والكلية لقراءة التحليل وتنزيل الملحقات."
             else ->

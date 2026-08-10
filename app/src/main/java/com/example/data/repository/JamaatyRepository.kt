@@ -7,6 +7,7 @@ import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.PreferenceEntity
 import com.example.data.local.entities.SemesterEntity
 import com.example.data.local.entities.CourseEntity
+import com.example.data.local.entities.ScheduleEntity
 import com.example.data.model.Book
 import com.example.data.model.ExamResult
 import com.example.data.model.Project
@@ -62,6 +63,21 @@ class JamaatyRepository(private val appDao: AppDao) {
         appDao.deleteCourse(course)
     }
 
+    // Schedule
+    val schedules: Flow<List<ScheduleEntity>> = appDao.getAllSchedules()
+
+    suspend fun addSchedule(schedule: ScheduleEntity) {
+        appDao.insertSchedule(schedule)
+    }
+
+    suspend fun deleteSchedule(schedule: ScheduleEntity) {
+        appDao.deleteSchedule(schedule)
+    }
+
+    suspend fun deleteAllSchedules() {
+        appDao.deleteAllSchedules()
+    }
+
     suspend fun isOnboardingCompleted(): Boolean {
         return appDao.getPreference("onboarding_completed") == "true"
     }
@@ -78,8 +94,9 @@ class JamaatyRepository(private val appDao: AppDao) {
         title: String,
         subtitle: String,
         faculty: String,
-        tag: String = ""
-    , isFav: Boolean) {
+        tag: String = "",
+        isFav: Boolean
+    ) {
         if (isFav) {
             appDao.deleteFavoriteById(id)
         } else {
@@ -101,14 +118,14 @@ class JamaatyRepository(private val appDao: AppDao) {
     }
 
     suspend fun getSavedProfile(): StudentProfile {
-        val name = appDao.getPreference("profile_name") ?: "أحمد محمد العباسي"
-        val studentId = appDao.getPreference("profile_id") ?: "2024-CSC-88412"
-        val university = appDao.getPreference("profile_university") ?: "جامعة الملك سعود"
-        val faculty = appDao.getPreference("profile_faculty") ?: "كلية الحاسبات والمعلومات"
-        val major = appDao.getPreference("profile_major") ?: "علوم الحاسب والذكاء الاصطناعي"
+        val name = appDao.getPreference("profile_name") ?: "أحمد عبدالله البنّاء"
+        val studentId = appDao.getPreference("profile_id") ?: "2024-YEM-88412"
+        val university = appDao.getPreference("profile_university") ?: "جامعة صنعاء"
+        val faculty = appDao.getPreference("profile_faculty") ?: "كلية الحاسوب وتكنولوجيا المعلومات"
+        val major = appDao.getPreference("profile_major") ?: "علوم الحاسوب والذكاء الاصطناعي"
         val level = appDao.getPreference("profile_level")?.toIntOrNull() ?: 3
         val gpa = appDao.getPreference("profile_gpa")?.toDoubleOrNull() ?: 3.84
-        val balance = appDao.getPreference("profile_balance")?.toDoubleOrNull() ?: 2450.00
+        val balance = appDao.getPreference("profile_balance")?.toDoubleOrNull() ?: 250000.00
         return StudentProfile(
             name = name,
             studentId = studentId,
@@ -133,33 +150,40 @@ class JamaatyRepository(private val appDao: AppDao) {
     }
 
     fun getUniversities(): List<String> = listOf(
-        "جامعة الملك سعود",
-        "جامعة الملك عبدالعزيز",
-        "جامعة أم القرى",
-        "جامعة الملك فهد للبترول والمعادن",
-        "جامعة القاهرة",
-        "جامعة الملك خالد",
-        "جامعة الإمام محمد بن سعود الإسلامية",
-        "جامعة الأميرة نورة bint عبدالرحمن"
+        "جامعة صنعاء",
+        "جامعة عدن",
+        "جامعة تعز",
+        "جامعة إب",
+        "جامعة ذمار",
+        "جامعة حضرموت",
+        "جامعة العلوم والتكنولوجيا - اليمن",
+        "جامعة الحديدة",
+        "الجامعة الإماراتية الدولية - صنعاء",
+        "جامعة سيئون",
+        "جامعة عمران"
     )
 
     fun getFaculties(): List<String> = listOf(
         "الكل",
-        "كلية الحاسبات والمعلومات",
-        "كلية الهندسة",
-        "كلية الطب والجراحة",
-        "كلية إدارة الأعمال",
-        "كلية العلوم"
+        "كلية الحاسوب وتكنولوجيا المعلومات",
+        "كلية الهندسة والبترول",
+        "كلية الطب والعلوم الصحية",
+        "كلية التجارة والاقتصاد",
+        "كلية العلوم",
+        "كلية الشريعة والقانون",
+        "كلية الآداب والعلوم الإنسانية"
     )
 
     fun getMajorsForFaculty(faculty: String): List<String> {
         return when (faculty) {
-            "كلية الحاسبات والمعلومات" -> listOf("علوم الحاسب والذكاء الاصطناعي", "هندسة البرمجيات", "نظم المعلومات", "الأمن السيبراني")
-            "كلية الهندسة" -> listOf("الهندسة المدنية", "الهندسة الكهربائية", "الهندسة الميكانيكية", "الهندسة المعمارية")
-            "كلية الطب والجراحة" -> listOf("الطب والجراحة العامة", "طب وجراحة الأسنان", "الصيدلة الإكلينيكية", "العلوم الطبية التطبيقية")
-            "كلية إدارة الأعمال" -> listOf("إدارة الأعمال", "المحاسبة والمالية", "التسويق الرقمي", "إدارة سلاسل الإمداد")
-            "كلية العلوم" -> listOf("الرياضيات التطبيقية", "الفيزياء والفيزياء الطبية", "الكيمياء الحيوية", "الأحياء والوراثة")
-            else -> listOf("علوم الحاسب والذكاء الاصطناعي", "هندسة البرمجيات", "إدارة الأعمال", "تخصص عام")
+            "كلية الحاسوب وتكنولوجيا المعلومات" -> listOf("علوم الحاسوب والذكاء الاصطناعي", "هندسة البرمجيات", "نظم المعلومات", "الأمن السيبراني والشبكات")
+            "كلية الهندسة والبترول" -> listOf("الهندسة المدنية", "الهندسة المعمارية", "الهندسة الكهربائية", "هندسة النفط والغاز")
+            "كلية الطب والعلوم الصحية" -> listOf("الطب والجراحة العامة", "طب وجراحة الأسنان", "الصيدلة الدوائية", "المختبرات الطبية")
+            "كلية التجارة والاقتصاد" -> listOf("إدارة الأعمال", "المحاسبة والمراجعة", "العلوم المالية والمصرفية", "التسويق الرقمي")
+            "كلية العلوم" -> listOf("الرياضيات والحاسوب", "الفيزياء التطبيقية", "الكيمياء الحيوية", "الأحياء والجيولوجيا")
+            "كلية الشريعة والقانون" -> listOf("الشريعة والقانون", "القانون العام", "القانون الخاص")
+            "كلية الآداب والعلوم الإنسانية" -> listOf("اللغة الإنجليزية والترجمة", "اللغة العربية وآدابها", "الإعلام والاتصال")
+            else -> listOf("علوم الحاسوب والذكاء الاصطناعي", "هندسة البرمجيات", "إدارة الأعمال", "تخصص عام")
         }
     }
 
@@ -168,21 +192,21 @@ class JamaatyRepository(private val appDao: AppDao) {
         Book(
             id = "b101",
             title = "مقدمة في برمجة الحواسب وتراكيب البيانات",
-            author = "د. خالد السعيد",
-            faculty = "كلية الحاسبات والمعلومات",
+            author = "د. صادق الشراجي",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
             level = 1,
             semester = 1,
             pages = 320,
             category = "كتاب مقرر",
             rating = 4.8f,
-            description = "مرجع شامل لأساسيات الخوارزميات وتراكيب البيانات بلغتي C++ و Java مع أداء التطبيقات الأساسية.",
+            description = "مرجع شامل لأساسيات الخوارزميات وتراكيب البيانات مع أمثلة تطبيقية للمناهج الجامعية اليمنية.",
             fileSize = "14.2 MB"
         ),
         Book(
             id = "b102",
             title = "الرياضيات الهندسية والتفاضل والتكامل I",
-            author = "أ.د. مصطفى حسان",
-            faculty = "كلية الهندسة",
+            author = "أ.د. عبدالكريم الكبسي",
+            faculty = "كلية الهندسة والبترول",
             level = 1,
             semester = 1,
             pages = 410,
@@ -194,64 +218,38 @@ class JamaatyRepository(private val appDao: AppDao) {
         Book(
             id = "b103",
             title = "علم التشريح البشري العام والوظائف",
-            author = "د. نادية الفاضل",
-            faculty = "كلية الطب والجراحة",
+            author = "د. أمة اللطيف الحيمي",
+            faculty = "كلية الطب والعلوم الصحية",
             level = 1,
             semester = 1,
             pages = 520,
             category = "كتاب مقرر",
             rating = 4.9f,
-            description = "أطلس مصور وشامل لأجهزة الجسم البشري ومبادئ علم وظائف الأعضاء للسنوات الأولى.",
+            description = "أطلس مصور وشامل لأجهزة الجسم البشري ومبادئ علم وظائف الأعضاء لطلاب الطب بالجمهورية اليمنية.",
             fileSize = "32.0 MB"
-        ),
-        Book(
-            id = "b104",
-            title = "مبادئ إدارة الأعمال والقيادة الحديثة",
-            author = "د. عمر الفاروق",
-            faculty = "كلية إدارة الأعمال",
-            level = 1,
-            semester = 2,
-            pages = 280,
-            category = "ملخص دراسي",
-            rating = 4.5f,
-            description = "دليل مبادئ التخطيط والتنظيم والتوجيه الإداري والمقومات الاقتصادية للشركات.",
-            fileSize = "8.7 MB"
         ),
 
         // Level 2
         Book(
             id = "b201",
             title = "قواعد البيانات ونظم إدارة المعلومات SQL",
-            author = "د. ياسر الشمري",
-            faculty = "كلية الحاسبات والمعلومات",
+            author = "د. محمد العمراني",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
             level = 2,
             semester = 1,
             pages = 350,
             category = "كتاب مقرر",
             rating = 4.7f,
-            description = "تصميم قواعد البيانات العلاقاتية وتحسين الاستعلامات والربط المعقد.",
+            description = "تصميم قواعد البيانات العلاقاتية وتحسين الاستعلامات والربط المعقد في الأنظمة الجامعية.",
             fileSize = "11.4 MB"
-        ),
-        Book(
-            id = "b202",
-            title = "الدوائر الكهربائية والإلكترونيات الرقمية",
-            author = "د. طارق الحكيم",
-            faculty = "كلية الهندسة",
-            level = 2,
-            semester = 2,
-            pages = 390,
-            category = "كتاب مقرر",
-            rating = 4.6f,
-            description = "دراسة المحولات والبوابات المنطقية وتحليل الدوائر الإلكترونية المتقدمة.",
-            fileSize = "16.1 MB"
         ),
 
         // Level 3
         Book(
             id = "b301",
             title = "هندسة البرمجيات وإدارة المشروعات التقنية",
-            author = "د. أسامة القحطاني",
-            faculty = "كلية الحاسبات والمعلومات",
+            author = "د. وليد البعداني",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
             level = 3,
             semester = 1,
             pages = 310,
@@ -262,189 +260,207 @@ class JamaatyRepository(private val appDao: AppDao) {
         ),
         Book(
             id = "b302",
-            title = "ذكاء الآلة والتعلم العميق للمهندسين",
-            author = "د. سامي الجابري",
-            faculty = "كلية الحاسبات والمعلومات",
+            title = "المحاسبة المتوسطة والتقارير المالية",
+            author = "د. فؤاد راشد",
+            faculty = "كلية التجارة والاقتصاد",
             level = 3,
-            semester = 2,
-            pages = 460,
-            category = "كتاب مقرر",
-            rating = 4.95f,
-            description = "تطبيقات الشبكات العصيبة الاصطناعية ومعالجة اللغات الطبيعية باستخدام Python.",
-            fileSize = "22.3 MB"
-        ),
-
-        // Level 4 & 5
-        Book(
-            id = "b401",
-            title = "الأمن السيبراني وتشفير البيانات المتقدم",
-            author = "د. فهد الماجد",
-            faculty = "كلية الحاسبات والمعلومات",
-            level = 4,
             semester = 1,
             pages = 380,
-            category = "مرجع أساسي",
-            rating = 4.88f,
-            description = "آليات التشفير المتناظر وغير المتناظر وحماية الشبكات وتحليل الثغرات الأمنية.",
-            fileSize = "15.0 MB"
+            category = "كتاب مقرر",
+            rating = 4.5f,
+            description = "شرح مفصل لمعايير المحاسبة الدولية وتطبيقاتها في الشركات اليمنية.",
+            fileSize = "15.2 MB"
+        ),
+        Book(
+            id = "b401",
+            title = "القانون الجنائي اليمني - القسم العام",
+            author = "أ.د. محمد الشامي",
+            faculty = "كلية الشريعة والقانون",
+            level = 2,
+            semester = 1,
+            pages = 450,
+            category = "كتاب مقرر",
+            rating = 4.7f,
+            description = "دراسة تحليلية لقانون الجرائم والعقوبات اليمني والنظريات العامة للجريمة.",
+            fileSize = "22.1 MB"
         ),
         Book(
             id = "b501",
-            title = "استراتيجيات التحول الرقمي وإدارة الابتكار",
-            author = "أ.د. ماجد الدوسري",
-            faculty = "كلية إدارة الأعمال",
-            level = 5,
-            semester = 2,
+            title = "تكنولوجيا الاتصالات والشبكات الحديثة",
+            author = "د. خليل المعمري",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
+            level = 4,
+            semester = 1,
             pages = 340,
-            category = "كتاب مقرر",
-            rating = 4.75f,
-            description = "إدارة التغيير في المؤسسات الكبرى وبناء نماذج الأعمال الرقمية الحديثة.",
-            fileSize = "12.6 MB"
+            category = "مرجع أساسي",
+            rating = 4.6f,
+            description = "بروتوكولات الشبكات، الأمن السيبراني، وتقنيات الجيل الخامس والاتصالات اللاسلكية.",
+            fileSize = "19.4 MB"
         )
     )
 
     fun getProjects(): List<Project> = listOf(
         Project(
             id = "p101",
-            title = "نظام ذكي للتشخيص المبكر لأمراض العيون باستخدام الذكاء الاصطناعي",
-            studentName = "عبدالرحمن الملا وزملاؤه",
-            supervisor = "د. سامي الجابري",
-            faculty = "كلية الحاسبات والمعلومات",
+            title = "نظام ذكي للتشخيص المبكر لأمراض العيون - جامعة صنعاء",
+            studentName = "عبدالرحمن المطري وزملاؤه",
+            supervisor = "د. عادل الصنعاني",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
             year = "2025",
             level = 4,
-            summary = "مشروع تخرج يستخدم شبكات CNN المتقدمة لتحليل صور شبكية العين واكتشاف المياه البيضاء بنسبة دقة 97.4%.",
-            tags = listOf("ذكاء اصطناعي", "رؤية حاسوبية", "طب رقمي")
+            summary = "مشروع تخرج بكلية الحاسوب جامعة صنعاء يستخدم شبكات CNN المتقدمة لتحليل صور شبكية العين.",
+            tags = listOf("ذكاء اصطناعي", "جامعة صنعاء", "طب رقمي")
         ),
         Project(
             id = "p102",
-            title = "تصميم شبكة مياه ذكية ومستدامة للمدن الحديثة",
-            studentName = "فاطمة الزهراء الشريف",
-            supervisor = "أ.د. مصطفى حسان",
-            faculty = "كلية الهندسة",
+            title = "تصميم شبكة مياه ذكية ومستدامة - جامعة عدن",
+            studentName = "فاطمة الزهراء اليافعي",
+            supervisor = "أ.د. عبدالكريم الكبسي",
+            faculty = "كلية الهندسة والبترول",
             year = "2024",
             level = 5,
-            summary = "تحليل هيدروليكي واستخدام مستشعرات IoT للكشف الذكي عن التسربات وتقليل الهدر في الشبكات المائية.",
-            tags = listOf("هندسة مدنية", "إنترنت الأشياء", "استدامة")
+            summary = "تحليل هيدروليكي واستخدام مستشعرات IoT للكشف الذكي عن التسربات.",
+            tags = listOf("هندسة مدنية", "جامعة عدن", "إنترنت الأشياء")
         ),
         Project(
             id = "p103",
-            title = "دراسة مقارنة لتأثير التسويق الرقمي على المنشآت الناشئة",
-            studentName = "سارة بن خالد",
-            supervisor = "د. عمر الفاروق",
-            faculty = "كلية إدارة الأعمال",
+            title = "دراسة أثر الشمول المالي على التنمية الاقتصادية في اليمن",
+            studentName = "محمد نبيل العبسي",
+            supervisor = "د. محمد العمراني",
+            faculty = "كلية التجارة والاقتصاد",
             year = "2025",
-            level = 3,
-            summary = "بحث ميداني يحلل سلوك المستهلك الرقمي وعوائد الاستثمار في حملات التواصل الاجتماعي بالمنطقة.",
-            tags = listOf("تسويق", "تحليل بيانات", "ريادة أعمال")
+            level = 4,
+            summary = "بحث علمي يتناول دور الخدمات المصرفية الرقمية في تعزيز الاقتصاد الوطني.",
+            tags = listOf("اقتصاد", "جامعة تعز", "شمول مالي")
         ),
         Project(
             id = "p104",
-            title = "منصة جامعتي الذكية لإدارة المناهج والخدمات الطلابية",
-            studentName = "فريق مبتكري المستقبل",
-            supervisor = "د. أسعد الهاشمي",
-            faculty = "كلية الحاسبات والمعلومات",
-            year = "2026",
+            title = "تطوير تطبيق لإدارة المحاكم والتقاضي الإلكتروني",
+            studentName = "هيثم القاضي",
+            supervisor = "د. أحمد الشامي",
+            faculty = "كلية الشريعة والقانون",
+            year = "2024",
             level = 4,
-            summary = "تطبيق أندرويد متكامل يجمع المكتبة، المحفظة المالية، وبنك الأسئلة التفاعلي لطلاب الجامعة.",
-            tags = listOf("أندرويد", "تطبيق جامعي", "Jetpack Compose")
+            summary = "مشروع تقني قانوني يهدف لأتمتة الإجراءات القضائية في المحاكم اليمنية.",
+            tags = listOf("قانون", "تقنية", "جامعة إب")
         )
     )
 
     fun getQuestions(): List<Question> = listOf(
+        // Computer Science & IT
         Question(
             id = "q101",
-            questionText = "ما هي التعقدية الزمانية (Time Complexity) الخوارزمية لخوارزمية البحث الثنائي (Binary Search) في مصفوفة مرتبة؟",
+            questionText = "ما هي التعقدية الزمانية لخوارزمية البحث الثنائي (Binary Search) في مصفوفة مرتبة؟",
             subject = "خوارزميات وتراكيب البيانات",
-            faculty = "كلية الحاسبات والمعلومات",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
             level = 2,
             semester = 1,
             difficulty = "متوسط",
             options = listOf("O(n)", "O(log n)", "O(n^2)", "O(1)"),
             correctIndex = 1,
-            explanation = "البحث الثنائي يقوم بتقسيم مصفوفة البحث إلى النصف في كل خطوة، مما يجعل التعقيد الزمني لوغاريتمي O(log n).",
-            tags = listOf("#خوارزميات", "#ترم_أول", "#اختبارات_سابقة"),
+            explanation = "البحث الثنائي يقوم بتقسيم مصفوفة البحث إلى النصف في كل خطوة، مما يجعله ذو كفاءة لوغاريتمية.",
+            tags = listOf("#خوارزميات", "#ترم_أول", "#جامعة_صنعاء"),
             versionHistory = listOf(
-                QuestionVersion("v1.2", "2026-01-15", "اللجنة الأكاديمية", "تحديث شرح الإجابة وإضافة تفاصيل تقليل الفضاء."),
-                QuestionVersion("v1.0", "2025-09-10", "د. خالد السعيد", "إضافة السؤال لبنك نماذج الاختبارات النهائي.")
-            )
-        ),
-        Question(
-            id = "q102",
-            questionText = "أي من العبارات التالية تصف مبدأ التجريد (Abstraction) في البرمجة كائنية التوجه (OOP) بشكل صحيح؟",
-            subject = "برمجة كائنية التوجه",
-            faculty = "كلية الحاسبات والمعلومات",
-            level = 1,
-            semester = 2,
-            difficulty = "سهل",
-            options = listOf(
-                "إخفاء تفاصيل التنفيذ الداخلي وإظهار الواجهة الضرورية فقط للمستخدم",
-                "وراثة الخصائص من فئة رئيسية إلى فئات فرعية",
-                "تعدد الأشكال واستدعاء الدالة بحسب الكائن",
-                "تجميع البيانات والدوال داخل كبسولة واحدة"
-            ),
-            correctIndex = 0,
-            explanation = "التجريد يركز على إظهار الميزات الأساسية للكائن وإخفاء تعقيد آليات العمل الداخلية.",
-            tags = listOf("#OOP", "#أساسيات", "#مستوى1"),
-            versionHistory = listOf(
-                QuestionVersion("v1.1", "2025-11-20", "د. أسامة", "مراجعة الخيارات لضبط الصياغة الأكاديمية.")
+                QuestionVersion("v1.0", "2025-09-10", "د. صادق الشراجي", "إضافة السؤال لبنك نماذج الاختبارات.")
             )
         ),
         Question(
             id = "q103",
-            questionText = "في قانون أوم الكهربائي، ما هي العلاقة بين حث التيار (I) والفرق في الجهد (V) عند ثبوت المقاومة (R)؟",
-            subject = "الفيزياء الهندسية والكهرباء",
-            faculty = "كلية الهندسة",
+            questionText = "ما هي وظيفة بروتوكول DHCP في شبكات الحاسوب؟",
+            subject = "شبكات الحاسوب",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
+            level = 3,
+            semester = 2,
+            difficulty = "سهل",
+            options = listOf("تشفير البيانات", "توزيع عناوين IP تلقائياً", "توجيه الرسائل البريدية", "ترجمة أسماء النطاقات"),
+            correctIndex = 1,
+            explanation = "يقوم بروتوكول DHCP بتخصيص عناوين IP وإعدادات الشبكة للأجهزة المنضمة للشبكة تلقائياً.",
+            tags = listOf("#شبكات", "#جامعة_تعز", "#IT"),
+            versionHistory = listOf(
+                QuestionVersion("v1.1", "2026-02-15", "م. وليد البعداني", "تحديث الخيارات.")
+            )
+        ),
+
+        // Engineering
+        Question(
+            id = "q102",
+            questionText = "في قانون أوم، ما هي العلاقة بين التيار والجهد عند ثبوت المقاومة؟",
+            subject = "الفيزياء الهندسية",
+            faculty = "كلية الهندسة والبترول",
             level = 1,
             semester = 1,
             difficulty = "سهل",
-            options = listOf(
-                "علاقة طردية خطية (I = V / R)",
-                "علاقة عكسية تربيعية",
-                "لا توجد علاقة بينهما",
-                "علاقة لوغاريتمية"
-            ),
+            options = listOf("طردية", "عكسية", "لا توجد", "لوغاريتمية"),
             correctIndex = 0,
-            explanation = "ينص قانون أوم على أن التيار المتدفق عبر موصل بين نقطتين يتناسب طردياً مع الجهد عبر النقطتين.",
+            explanation = "التيار يتناسب طردياً مع الجهد الكهربائي عند ثبوت قيمة المقاومة (V = I * R).",
             tags = listOf("#فيزياء", "#هندسة", "#قانون_أوم"),
             versionHistory = listOf(
-                QuestionVersion("v1.0", "2025-10-01", "أ.د. مصطفى", "إدخال السؤال في بنك الأسئلة الشامل.")
+                QuestionVersion("v1.0", "2025-10-01", "أ.د. الكبسي", "إدخال السؤال في بنك الأسئلة.")
             )
         ),
         Question(
-            id = "q104",
-            questionText = "ما هو العضو الرئيسي المسؤول عن تصفية الدم وتنظيم التوازن المائي والسام في الجسم البشري؟",
-            subject = "وظائف الأعضاء (Physiology)",
-            faculty = "كلية الطب والجراحة",
+            id = "q201",
+            questionText = "ما هي المادة الأساسية المستخدمة في صناعة الخرسانة المسلحة لمقاومة قوى الشد؟",
+            subject = "مواد البناء",
+            faculty = "كلية الهندسة والبترول",
             level = 2,
             semester = 1,
-            difficulty = "متوسط",
-            options = listOf("الكبِد", "الكلية (Kidney)", "الرئة", "البنكرياس"),
-            correctIndex = 1,
-            explanation = "تقوم الكليتان بتصفية السوائل والفضلات الأيضية من الدم الحركي وإخراجها وتنظيم الضغط المائي.",
-            tags = listOf("#طب", "#وظائف_أعضاء", "#تشريح"),
+            difficulty = "سهل",
+            options = listOf("الرمل", "الأسمنت", "حديد التسليح", "الحصى"),
+            correctIndex = 2,
+            explanation = "الخرسانة تقاوم الضغط بشكل ممتاز ولكنها ضعيفة في الشد، لذا يضاف حديد التسليح لتحمل قوى الشد.",
+            tags = listOf("#هندسة_مدنية", "#مواد_بناء", "#جامعة_عدن"),
             versionHistory = listOf(
-                QuestionVersion("v1.0", "2025-08-12", "د. نادية", "سؤال دوري في نماذج الاختبارات النصفية.")
+                QuestionVersion("v1.0", "2024-11-20", "د. نبيل غانم", "إضافة سؤال لمقرر الخرسانة.")
+            )
+        ),
+
+        // Medicine & Health Sciences
+        Question(
+            id = "q301",
+            questionText = "ما هو العضو المسؤول عن تصفية الدم من الفضلات وإنتاج البول؟",
+            subject = "علم وظائف الأعضاء (Physiology)",
+            faculty = "كلية الطب والعلوم الصحية",
+            level = 2,
+            semester = 1,
+            difficulty = "سهل",
+            options = listOf("الكبد", "الطحال", "الكلية", "البنكرياس"),
+            correctIndex = 2,
+            explanation = "تقوم الكليتان بتصفية الدم وتنظيم توازن السوائل والأملاح في الجسم.",
+            tags = listOf("#طب", "#Physiology", "#جامعة_إب"),
+            versionHistory = listOf(
+                QuestionVersion("v1.0", "2025-12-05", "د. أمة اللطيف الحيمي", "سؤال أساسي لطلاب الطب.")
             )
         ),
         Question(
-            id = "q105",
-            questionText = "ما هي الفائدة الرئيسية لإستخدام الفهارس (Indexes) في قواعد البيانات العلاقاتية SQL؟",
-            subject = "قواعد البيانات SQL",
-            faculty = "كلية الحاسبات والمعلومات",
-            level = 2,
+            id = "q302",
+            questionText = "أي من الفيتامينات التالية يساهم في عملية تخثر الدم؟",
+            subject = "الكيمياء الحيوية",
+            faculty = "كلية الطب والعلوم الصحية",
+            level = 1,
             semester = 2,
-            difficulty = "صعب",
-            options = listOf(
-                "توفير المساحة التخزينية في القرص الصلب",
-                "تسريع عمليات استعلام وقراءة البيانات SELECT على حساب سرعة الكتابة",
-                "تشفير البيانات الحساسة بشكل تلقائي",
-                "النسخ الاحتياطي التلقائي للجداول"
-            ),
+            difficulty = "متوسط",
+            options = listOf("Vitamin C", "Vitamin D", "Vitamin K", "Vitamin A"),
+            correctIndex = 2,
+            explanation = "فيتامين K ضروري لتصنيع بروتينات التخثر في الكبد.",
+            tags = listOf("#Biochemistry", "#فيتامينات", "#طب_جامعة_ذمار")
+        ),
+
+        // Commerce & Economics
+        Question(
+            id = "q401",
+            questionText = "ما هو المبدأ المحاسبي الذي ينص على تسجيل الإيرادات عند تحققها وليس عند استلام النقد؟",
+            subject = "مبادئ المحاسبة",
+            faculty = "كلية التجارة والاقتصاد",
+            level = 1,
+            semester = 1,
+            difficulty = "متوسط",
+            options = listOf("الأساس النقدي", "أساس الاستحقاق", "مبدأ التكلفة التاريخية", "مبدأ الحيطة والحذر"),
             correctIndex = 1,
-            explanation = "تنشئ الفهارس تراكيب بيانات متوازنة B-Tree لتسريع استرجاع السجلات بدلاً من التفتيش الكامل للجدول Full Table Scan.",
-            tags = listOf("#قواعد_بيانات", "#SQL", "#صعب"),
+            explanation = "أساس الاستحقاق يقضي بتسجيل العمليات المالية في الفترة التي حدثت فيها بغض النظر عن الحركة النقدية.",
+            tags = listOf("#محاسبة", "#جامعة_صنعاء", "#تجارة"),
             versionHistory = listOf(
-                QuestionVersion("v2.0", "2026-02-01", "مراجعة الاختبارات", "تحديث الخيار الرابع وتدقيق تعقيد البحث.")
+                QuestionVersion("v1.0", "2025-08-15", "د. محمد العمراني", "إضافة مقرر محاسبة 1.")
             )
         )
     )
@@ -455,36 +471,36 @@ class JamaatyRepository(private val appDao: AppDao) {
             termAr = "تراكيب البيانات",
             termEn = "Data Structures",
             definitionAr = "طريقة تنظيم وتخزين البيانات في الحاسوب لتسهيل الوصول إليها وتعديلها بكفاءة.",
-            definitionEn = "A specialized format for organizing, processing, retrieving and storing data.",
-            faculty = "كلية الحاسبات والمعلومات",
-            example = "Arrays and Linked Lists are fundamental data structures."
+            definitionEn = "A specialized format for organizing and storing data.",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
+            example = "Arrays and Linked Lists."
         ),
         VocabularyCard(
             id = "v2",
-            termAr = "معالجة اللغات الطبيعية",
-            termEn = "Natural Language Processing (NLP)",
-            definitionAr = "فرع من الذكاء الاصطناعي يهدف لفهم وتحليل وتوليد اللغة البشرية بواسطة الحاسوب.",
-            definitionEn = "A field of AI focused on enabling computers to understand human language.",
-            faculty = "كلية الحاسبات والمعلومات",
-            example = "NLP enables automated translation and sentiment analysis."
+            termAr = "الذكاء الاصطناعي",
+            termEn = "Artificial Intelligence",
+            definitionAr = "محاكاة العمليات الذهنية البشرية بواسطة أنظمة الكمبيوتر.",
+            definitionEn = "The simulation of human intelligence processes by machines.",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
+            example = "Machine Learning, Neural Networks."
         ),
         VocabularyCard(
             id = "v3",
-            termAr = "التحليل الهيدروليكي",
-            termEn = "Hydraulic Analysis",
-            definitionAr = "دراسة تدفق السوائل والقوى المؤثرة عليها داخل أنابيب وقنوات الري والشبكات.",
-            definitionEn = "The study of fluid flow behavior in pipe networks and open channels.",
-            faculty = "كلية الهندسة",
-            example = "Engineers use hydraulic analysis to design city water distribution."
+            termAr = "الهندسة المدنية",
+            termEn = "Civil Engineering",
+            definitionAr = "فرع هندسي يهتم بتصميم وبناء وصيانة المنشآت مثل الجسور والطرق.",
+            definitionEn = "Engineering discipline that deals with the design and construction of the built environment.",
+            faculty = "كلية الهندسة والبترول",
+            example = "Skyscrapers and dams."
         ),
         VocabularyCard(
             id = "v4",
-            termAr = "علم الأدوية والفارماكولوجي",
-            termEn = "Pharmacology",
-            definitionAr = "الدراسة العلمية لاستجابة الأجسام الحية للمركبات الكيميائية والأدوية العلاجية.",
-            definitionEn = "The branch of medicine concerned with the uses, effects, and modes of action of drugs.",
-            faculty = "كلية الطب والجراحة",
-            example = "Pharmacology helps clinicians understand drug interaction and toxicity."
+            termAr = "المحاسبة المالية",
+            termEn = "Financial Accounting",
+            definitionAr = "عملية تسجيل وتلخيص وإعداد التقارير عن العمليات المالية للمنشأة.",
+            definitionEn = "The process of recording, summarizing and reporting the myriad of transactions resulting from business operations.",
+            faculty = "كلية التجارة والاقتصاد",
+            example = "Balance sheets and income statements."
         )
     )
 
@@ -493,41 +509,38 @@ class JamaatyRepository(private val appDao: AppDao) {
             id = "wl1",
             nameAr = "المكتبة الرقمية العالمية (WDL)",
             nameEn = "World Digital Library",
-            category = "مكتبة تاريخية وأكاديمية",
+            category = "مكتبة تاريخية",
             url = "https://www.wdl.org",
-            description = "تتيح الوصول المجاني للمخطوطات والكتب النادرة والمراجع التاريخية من جميع دول العالم."
+            description = "تتيح الوصول المجاني للمراجع التاريخية والمخطوطات النادرة من مختلف دول العالم."
         ),
         WorldLibrary(
             id = "wl2",
-            nameAr = "مكتبة IEEE Xplore التقنية",
-            nameEn = "IEEE Xplore Digital Library",
-            category = "هندسة وحاسبات",
-            url = "https://ieeexplore.ieee.org",
-            description = "أضخم قاعدة بيانات علمية محكمة للأبحاث الهندسية وعلوم الحاسب والاتصالات."
+            nameAr = "منصة جوجل للأبحاث (Google Scholar)",
+            nameEn = "Google Scholar",
+            category = "محرك بحث أكاديمي",
+            url = "https://scholar.google.com",
+            description = "محرك بحث متخصص في المؤلفات الأكاديمية والرسائل العلمية والمقالات الموثقة."
         ),
         WorldLibrary(
             id = "wl3",
-            nameAr = "المكتبة الطبية الوطنية (PubMed)",
-            nameEn = "PubMed National Library",
-            category = "علوم طبية وحيوية",
-            url = "https://pubmed.ncbi.nlm.nih.gov",
-            description = "أكثر من 35 مليون مقال وبحث طبي محكم في الرعاية الصحية والأدوية."
+            nameAr = "أرشيف الإنترنت (Internet Archive)",
+            nameEn = "Internet Archive",
+            category = "مكتبة رقمية شاملة",
+            url = "https://archive.org",
+            description = "مكتبة ضخمة تضم ملايين الكتب المجانية، والأفلام، والبرمجيات، والموسيقى."
         ),
         WorldLibrary(
             id = "wl4",
-            nameAr = "الباحث العلمي من جوجل (Google Scholar)",
-            nameEn = "Google Scholar",
-            category = "أبحاث وأطروحات عامة",
-            url = "https://scholar.google.com",
-            description = "محرك بحث أكاديمي شامل للأوراق العلمية والرسائل الجامعية والاقتباسات."
+            nameAr = "بنك المعرفة العربي (AskZad)",
+            nameEn = "AskZad",
+            category = "قاعدة بيانات عربية",
+            url = "https://www.askzad.com",
+            description = "أكبر قاعدة بيانات عربية تضم كتباً ودوريات وأبحاثاً علمية باللغة العربية."
         )
     )
 
     fun getExamResults(): List<ExamResult> = listOf(
         ExamResult("CSC301", "هندسة البرمجيات", 3, "A+", 98),
-        ExamResult("CSC302", "الذكاء الاصطناعي", 3, "A", 93),
-        ExamResult("CSC303", "قواعد البيانات 2", 3, "A-", 89),
-        ExamResult("MTH201", "الاحتمالات والإحصاء", 2, "B+", 86),
-        ExamResult("ENG102", "الكتابة الأكاديمية بالإنجليزية", 2, "A", 92)
+        ExamResult("CSC302", "الذكاء الاصطناعي", 3, "A", 93)
     )
 }

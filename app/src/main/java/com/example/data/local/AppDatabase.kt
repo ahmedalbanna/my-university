@@ -11,6 +11,7 @@ import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.PreferenceEntity
 import com.example.data.local.entities.SemesterEntity
 import com.example.data.local.entities.CourseEntity
+import com.example.data.local.entities.ScheduleEntity
 
 @Database(
     entities = [
@@ -19,9 +20,10 @@ import com.example.data.local.entities.CourseEntity
         PreferenceEntity::class, 
         NotificationEntity::class,
         SemesterEntity::class,
-        CourseEntity::class
+        CourseEntity::class,
+        ScheduleEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

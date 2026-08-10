@@ -10,7 +10,7 @@ data class PaymentEntity(
     val title: String,
     val category: String, // "TUITION", "PRIVATE_TUITION", "TELECOM", "OTHER"
     val amount: Double,
-    val currency: String = "ر.س",
+    val currency: String = "ر.ي",
     val status: String, // "PAID", "PENDING", "FAILED"
     val date: String,
     val referenceNo: String,

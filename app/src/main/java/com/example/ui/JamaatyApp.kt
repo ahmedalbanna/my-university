@@ -37,6 +37,8 @@ import com.example.ui.screens.library.LibraryScreen
 import com.example.ui.screens.more.TranslateMoreScreen
 import com.example.ui.screens.notifications.NotificationScreen
 import com.example.ui.screens.onboarding.OnboardingScreen
+import com.example.ui.screens.courses.CoursesScreen
+import com.example.ui.screens.schedule.ScheduleScreen
 import com.example.ui.screens.wallet.WalletScreen
 import com.example.ui.viewmodel.JamaatyViewModel
 
@@ -52,6 +54,8 @@ fun JamaatyApp(
     var showDeepLinkDialog by remember { mutableStateOf(false) }
     var showNotifications by remember { mutableStateOf(false) }
     var showGpaCalculator by remember { mutableStateOf(false) }
+    var showSchedule by remember { mutableStateOf(false) }
+    var showCourses by remember { mutableStateOf(false) }
 
     // Observe ViewModel state
     val profile by viewModel.studentProfile.collectAsState()
@@ -119,12 +123,14 @@ fun JamaatyApp(
     }
 
     // System Back Handler Refinement
-    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || currentTab != BottomTab.Home) {
+    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || showSchedule || showCourses || currentTab != BottomTab.Home) {
         when {
             showAiChatSheet -> showAiChatSheet = false
             showDeepLinkDialog -> showDeepLinkDialog = false
             showNotifications -> showNotifications = false
             showGpaCalculator -> showGpaCalculator = false
+            showSchedule -> showSchedule = false
+            showCourses -> showCourses = false
             currentTab != BottomTab.Home -> currentTab = BottomTab.Home
         }
     }
@@ -197,6 +203,8 @@ fun JamaatyApp(
                                 onNavigateToTab = { route ->
                                     BottomTab.list.find { it.route == route }?.let { currentTab = it }
                                 },
+                                onNavigateToSchedule = { showSchedule = true },
+                                onNavigateToCourses = { showCourses = true },
                                 onToggleFavorite = { id, type, title, sub, fac ->
                                     viewModel.toggleFavorite(id, type, title, sub, fac)
                                 },
@@ -310,6 +318,28 @@ fun JamaatyApp(
             GpaCalculatorScreen(
                 viewModel = viewModel,
                 onBack = { showGpaCalculator = false }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showSchedule,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            ScheduleScreen(
+                viewModel = viewModel,
+                onBack = { showSchedule = false }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showCourses,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            CoursesScreen(
+                viewModel = viewModel,
+                onBack = { showCourses = false }
             )
         }
     }

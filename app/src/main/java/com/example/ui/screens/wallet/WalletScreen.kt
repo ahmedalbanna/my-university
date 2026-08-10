@@ -98,7 +98,7 @@ fun WalletScreen(
                         color = Color.White.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = "${profile.balance} ر.س",
+                        text = "${profile.balance} ر.ي",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -160,10 +160,10 @@ fun WalletScreen(
                         FeeItemCard(
                             title = "رسوم الفصل الدراسي الثاني 2026",
                             dueDate = "2026-09-01",
-                            amount = 3500.0,
+                            amount = 250000.0,
                             isPaid = false,
                             onPayNow = {
-                                selectedServiceForPay = Pair("رسوم الفصل الدراسي الثاني 2026", 3500.0)
+                                selectedServiceForPay = Pair("رسوم الفصل الدراسي الثاني 2026", 250000.0)
                                 showPaymentModal = true
                             }
                         )
@@ -173,10 +173,10 @@ fun WalletScreen(
                         FeeItemCard(
                             title = "رسوم المعامل والإنترنت والتطبيقات",
                             dueDate = "2026-08-30",
-                            amount = 250.0,
+                            amount = 15000.0,
                             isPaid = false,
                             onPayNow = {
-                                selectedServiceForPay = Pair("رسوم المعامل والإنترنت والتطبيقات", 250.0)
+                                selectedServiceForPay = Pair("رسوم المعامل والإنترنت والتطبيقات", 15000.0)
                                 showPaymentModal = true
                             }
                         )
@@ -186,7 +186,7 @@ fun WalletScreen(
                         FeeItemCard(
                             title = "رسوم الفصل الدراسي الأول 2026",
                             dueDate = "2026-01-10",
-                            amount = 3500.0,
+                            amount = 250000.0,
                             isPaid = true,
                             onPayNow = {}
                         )
@@ -212,10 +212,10 @@ fun WalletScreen(
                     item {
                         TelecomServiceCard(
                             title = "باقة الاتصالات الطلابية الشاملة (50GB + مكالمات)",
-                            price = 120.0,
+                            price = 5500.0,
                             features = listOf("50 جيجابايت إنترنت سريع للمناهج", "تصفح مجاني لموقع الجامعة والمكتبة", "تجديد شهري تلقائي"),
                             onSubscribe = {
-                                selectedServiceForPay = Pair("باقة الاتصالات الطلابية 50GB", 120.0)
+                                selectedServiceForPay = Pair("باقة الاتصالات الطلابية 50GB", 5500.0)
                                 showPaymentModal = true
                             }
                         )
@@ -224,10 +224,10 @@ fun WalletScreen(
                     item {
                         TelecomServiceCard(
                             title = "خدمة المتابعة والدروس الخاصة (نفقة خاصة)",
-                            price = 450.0,
+                            price = 12000.0,
                             features = listOf("جلسات تقوية مع معيدين معتمدين", "مراجعة مشروعات التخرج", "مباشر عبر المنصة"),
                             onSubscribe = {
-                                selectedServiceForPay = Pair("خدمة المتابعة والدروس الخاصة", 450.0)
+                                selectedServiceForPay = Pair("خدمة المتابعة والدروس الخاصة", 12000.0)
                                 showPaymentModal = true
                             }
                         )
@@ -296,7 +296,7 @@ fun FeeItemCard(
                 Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                 Text(text = "تاريخ الاستحقاق: $dueDate", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "$amount ر.س", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                Text(text = "$amount ر.ي", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
             }
 
             if (isPaid) {
@@ -343,7 +343,7 @@ fun TelecomServiceCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                 }
-                Text(text = "$price ر.س/شهرياً", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                Text(text = "$price ر.ي/شهرياً", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -402,7 +402,7 @@ fun PaymentModalBottomSheet(
     onConfirmPayment: (String) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    var selectedMethod by remember { mutableStateOf("بطاقة مدى / Mada") }
+    var selectedMethod by remember { mutableStateOf("محفظة الكريمي / كاش") }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -425,7 +425,7 @@ fun PaymentModalBottomSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(text = "الخدمة: $title", fontWeight = FontWeight.SemiBold)
-            Text(text = "المبلغ المطلوب: $amount ر.س", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Text(text = "المبلغ المطلوب: $amount ر.ي", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -433,7 +433,7 @@ fun PaymentModalBottomSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            listOf("بطاقة مدى / Mada", "البطاقة الائتمانية Visa/MasterCard", "المحفظة الرقمية (الرصيد: $walletBalance ر.س)").forEach { method ->
+            listOf("محفظة الكريمي / كاش", "تحويل بنكي / صرافة", "المحفظة الرقمية (الرصيد: $walletBalance ر.ي)").forEach { method ->
                 Surface(
                     onClick = { selectedMethod = method },
                     shape = RoundedCornerShape(10.dp),
@@ -453,7 +453,7 @@ fun PaymentModalBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("تأكيد ودفع $amount ر.س الآن", fontWeight = FontWeight.Bold)
+                Text("تأكيد ودفع $amount ر.ي الآن", fontWeight = FontWeight.Bold)
             }
         }
     }

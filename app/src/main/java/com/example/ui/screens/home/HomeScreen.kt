@@ -32,6 +32,9 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -64,6 +67,8 @@ fun HomeScreen(
     recommendedBooks: List<Book>,
     onSelectLevel: (Int) -> Unit,
     onNavigateToTab: (String) -> Unit,
+    onNavigateToSchedule: () -> Unit,
+    onNavigateToCourses: () -> Unit,
     onToggleFavorite: (String, String, String, String, String) -> Unit,
     isFavorite: (String) -> Boolean
 ) {
@@ -197,11 +202,11 @@ fun HomeScreen(
         ) {
             HomeStatCard(
                 title = "المقرات الدراسية",
-                value = "${recommendedBooks.size} كتب",
-                icon = Icons.Default.MenuBook,
+                value = "تتبع التقدم",
+                icon = Icons.Default.School,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f),
-                onClick = { onNavigateToTab("library") }
+                onClick = { onNavigateToCourses() }
             )
             HomeStatCard(
                 title = "بنك الأسئلة",
@@ -213,7 +218,7 @@ fun HomeScreen(
             )
             HomeStatCard(
                 title = "الرصيد والرسوم",
-                value = "${profile.balance} ر.س",
+                value = "${profile.balance} ر.ي",
                 icon = Icons.Default.AccountBalanceWallet,
                 color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.weight(1f),
@@ -233,6 +238,79 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             DigitalStudentCard(profile = profile)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Section: Today's Schedule Preview
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "📅 جدول محاضرات اليوم",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "عرض الجدول الكامل",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onNavigateToSchedule() }
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToSchedule() },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = Color.White)
+                    }
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "خوارزميات وتراكيب البيانات",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "08:00 - 10:00 • د. صادق الشراجي",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    Icon(
+                        Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -304,13 +382,13 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 QuickActionBanner(
-                    title = "نماذج الاختبارات",
-                    subtitle = "تمارين وتتبع الإصدارات",
-                    icon = Icons.Default.Assignment,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    title = "جدول المحاضرات",
+                    subtitle = "متابعة أسبوعية",
+                    icon = Icons.Default.CalendarMonth,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.weight(1f),
-                    onClick = { onNavigateToTab("exams") }
+                    onClick = { onNavigateToSchedule() }
                 )
 
                 QuickActionBanner(

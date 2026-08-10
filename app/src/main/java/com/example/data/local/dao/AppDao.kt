@@ -11,6 +11,7 @@ import com.example.data.local.entities.PaymentEntity
 import com.example.data.local.entities.PreferenceEntity
 import com.example.data.local.entities.SemesterEntity
 import com.example.data.local.entities.CourseEntity
+import com.example.data.local.entities.ScheduleEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -63,6 +64,19 @@ interface AppDao {
 
     @Query("DELETE FROM courses WHERE semesterId = :semesterId")
     suspend fun deleteCoursesForSemester(semesterId: String)
+
+    // Schedule
+    @Query("SELECT * FROM schedules ORDER BY dayOfWeek, startTime")
+    fun getAllSchedules(): Flow<List<ScheduleEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSchedule(schedule: ScheduleEntity)
+
+    @Delete
+    suspend fun deleteSchedule(schedule: ScheduleEntity)
+
+    @Query("DELETE FROM schedules")
+    suspend fun deleteAllSchedules()
 
     // Notifications
     @Query("SELECT * FROM notifications ORDER BY timestamp DESC")

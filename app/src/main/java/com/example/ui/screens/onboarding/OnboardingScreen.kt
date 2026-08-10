@@ -45,28 +45,32 @@ data class OnboardingPage(
 fun OnboardingScreen(
     initialProfile: StudentProfile = StudentProfile(),
     universities: List<String> = listOf(
-        "جامعة الملك سعود",
-        "جامعة الملك عبدالعزيز",
-        "جامعة أم القرى",
-        "جامعة الملك فهد للبترول والمعادن",
-        "جامعة القاهرة",
-        "جامعة الملك خالد",
-        "جامعة الإمام محمد بن سعود الإسلامية"
+        "جامعة صنعاء",
+        "جامعة عدن",
+        "جامعة تعز",
+        "جامعة إب",
+        "جامعة ذمار",
+        "جامعة حضرموت",
+        "جامعة العلوم والتكنولوجيا - اليمن",
+        "جامعة الحديدة",
+        "الجامعة الإماراتية الدولية - صنعاء"
     ),
     faculties: List<String> = listOf(
-        "كلية الحاسبات والمعلومات",
-        "كلية الهندسة",
-        "كلية الطب والجراحة",
-        "كلية إدارة الأعمال",
-        "كلية العلوم"
+        "كلية الحاسوب وتكنولوجيا المعلومات",
+        "كلية الهندسة والبترول",
+        "كلية الطب والعلوم الصحية",
+        "كلية التجارة والاقتصاد",
+        "كلية العلوم",
+        "كلية الشريعة والقانون"
     ),
     getMajorsForFaculty: (String) -> List<String> = { faculty ->
         when (faculty) {
-            "كلية الحاسبات والمعلومات" -> listOf("علوم الحاسب والذكاء الاصطناعي", "هندسة البرمجيات", "نظم المعلومات", "الأمن السيبراني")
-            "كلية الهندسة" -> listOf("الهندسة المدنية", "الهندسة الكهربائية", "الهندسة الميكانيكية", "الهندسة المعمارية")
-            "كلية الطب والجراحة" -> listOf("الطب والجراحة العامة", "طب وجراحة الأسنان", "الصيدلة الإكلينيكية")
-            "كلية إدارة الأعمال" -> listOf("إدارة الأعمال", "المحاسبة والمالية", "التسويق الرقمي")
-            else -> listOf("علوم الحاسب والذكاء الاصطناعي", "هندسة البرمجيات", "تخصص عام")
+            "كلية الحاسوب وتكنولوجيا المعلومات" -> listOf("علوم الحاسوب والذكاء الاصطناعي", "هندسة البرمجيات", "نظم المعلومات", "الأمن السيبراني والشبكات")
+            "كلية الهندسة والبترول" -> listOf("الهندسة المدنية", "الهندسة المعمارية", "الهندسة الكهربائية", "هندسة النفط والغاز")
+            "كلية الطب والعلوم الصحية" -> listOf("الطب والجراحة العامة", "طب وجراحة الأسنان", "الصيدلة الدوائية", "المختبرات الطبية")
+            "كلية التجارة والاقتصاد" -> listOf("إدارة الأعمال", "المحاسبة والمراجعة", "العلوم المالية والمصرفية")
+            "كلية الشريعة والقانون" -> listOf("الشريعة والقانون", "القانون العام", "القانون الخاص")
+            else -> listOf("علوم الحاسوب والذكاء الاصطناعي", "هندسة البرمجيات", "تخصص عام")
         }
     },
     onSaveProfileAndFinish: (name: String, studentId: String, university: String, faculty: String, major: String, level: Int) -> Unit
@@ -134,8 +138,8 @@ fun OnboardingScreen(
                     onLevelChange = { selectedLevel = it },
                     onFinish = {
                         onSaveProfileAndFinish(
-                            studentName.ifBlank { "أحمد محمد العباسي" },
-                            studentId.ifBlank { "2024-CSC-88412" },
+                            studentName.ifBlank { "أحمد عبدالله البنّاء" },
+                            studentId.ifBlank { "2024-YEM-88412" },
                             selectedUniversity,
                             selectedFaculty,
                             selectedMajor,
@@ -558,7 +562,7 @@ fun ProfileDataStep(
             value = studentName,
             onValueChange = onNameChange,
             label = { Text("اسم الطالب الكامل") },
-            placeholder = { Text("مثال: أحمد محمد العباسي") },
+            placeholder = { Text("مثال: أحمد عبدالله البنّاء") },
             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -575,7 +579,7 @@ fun ProfileDataStep(
             value = studentId,
             onValueChange = onIdChange,
             label = { Text("الرقم الجامعي") },
-            placeholder = { Text("مثال: 442109852") },
+            placeholder = { Text("مثال: 2024-YEM-88412") },
             leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             modifier = Modifier
                 .fillMaxWidth()
