@@ -255,6 +255,9 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     )
     val chatMessages: StateFlow<List<ChatMessage>> = _chatMessages.asStateFlow()
 
+    private val _unreadAiMessagesCount = MutableStateFlow(0)
+    val unreadAiMessagesCount: StateFlow<Int> = _unreadAiMessagesCount.asStateFlow()
+
     // Favorites & Payments from Room DB
     val favorites: StateFlow<List<FavoriteEntity>> = repository.favorites.stateIn(
         viewModelScope,
@@ -590,7 +593,15 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             val updated = _chatMessages.value.toMutableList()
             updated.add(ChatMessage("JAMAATY_AI", aiResponse))
             _chatMessages.value = updated
+            
+            // For demo: increment unread if chat was hidden (handled in UI usually)
+            // But here we'll just increment to show the badge functionality
+            _unreadAiMessagesCount.value += 1
         }
+    }
+
+    fun markAiChatAsRead() {
+        _unreadAiMessagesCount.value = 0
     }
 
     fun clearChat() {

@@ -81,6 +81,7 @@ fun JamaatyApp(
     val favorites by viewModel.favorites.collectAsState()
     val payments by viewModel.payments.collectAsState()
     val unreadNotificationsCount by viewModel.unreadNotificationsCount.collectAsState()
+    val unreadAiMessagesCount by viewModel.unreadAiMessagesCount.collectAsState()
     val chatMessages by viewModel.chatMessages.collectAsState()
 
     // Deep Link Application Function
@@ -111,6 +112,13 @@ fun JamaatyApp(
                 }
                 DeepLinkResult.Invalid -> { /* ignore invalid link */ }
             }
+        }
+    }
+
+    // Clear AI unread count when chat is opened
+    LaunchedEffect(showAiChatSheet) {
+        if (showAiChatSheet) {
+            viewModel.markAiChatAsRead()
         }
     }
 
@@ -171,6 +179,7 @@ fun JamaatyApp(
                     studentName = profile.name,
                     favoritesCount = favorites.size,
                     unreadNotificationsCount = unreadNotificationsCount,
+                    unreadAiMessagesCount = unreadAiMessagesCount,
                     onOpenAiChat = { showAiChatSheet = true },
                     onOpenFavorites = { currentTab = BottomTab.TranslateMore },
                     onOpenNotifications = { showNotifications = true },

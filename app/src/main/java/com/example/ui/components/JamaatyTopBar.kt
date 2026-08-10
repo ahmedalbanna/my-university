@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +46,7 @@ fun JamaatyTopBar(
     studentName: String,
     favoritesCount: Int,
     unreadNotificationsCount: Int,
+    unreadAiMessagesCount: Int = 0,
     onOpenAiChat: () -> Unit,
     onOpenFavorites: () -> Unit,
     onOpenNotifications: () -> Unit,
@@ -53,168 +56,199 @@ fun JamaatyTopBar(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp,
-        shadowElevation = 4.dp
+        tonalElevation = 1.dp,
+        shadowElevation = 0.dp // Cleaner flat look for modern M3
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Right: App Icon & Title
+        Column {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.secondary
+                // Right: App Brand Section
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .size(40.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        shadowElevation = 4.dp
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.secondary
+                                    )
                                 )
                             )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.School,
-                        contentDescription = "جامعتي",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "جامعتي",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            Text(
-                                text = "المستوى $selectedLevel",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            Icon(
+                                imageVector = Icons.Default.School,
+                                contentDescription = "جامعتي",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
-                    Text(
-                        text = "أهلاً $studentName",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
 
-            // Left: Actions (DeepLink, Favorites & AI Helper)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Deep Link Tester Button
-                IconButton(
-                    onClick = onOpenDeepLinkTester,
-                    modifier = Modifier.testTag("top_bar_deep_link_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Link,
-                        contentDescription = "رابط عميق",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                // Notifications Badge Button
-                IconButton(
-                    onClick = onOpenNotifications,
-                    modifier = Modifier.testTag("top_bar_notifications_button")
-                ) {
-                    BadgedBox(
-                        badge = {
-                            if (unreadNotificationsCount > 0) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
-                                ) {
-                                    Text(text = "$unreadNotificationsCount")
-                                }
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "جامعتي",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                letterSpacing = 0.sp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(top = 2.dp)
+                            ) {
+                                Text(
+                                    text = "مستوى $selectedLevel",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontSize = 10.sp
+                                )
                             }
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "التنبيهات",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // Favorites Badge Button
-                IconButton(
-                    onClick = onOpenFavorites,
-                    modifier = Modifier.testTag("top_bar_favorites_button")
-                ) {
-                    BadgedBox(
-                        badge = {
-                            if (favoritesCount > 0) {
-                                Badge(
-                                    containerColor = MaterialTheme.colorScheme.secondary,
-                                    contentColor = MaterialTheme.colorScheme.onSecondary
-                                ) {
-                                    Text(text = "$favoritesCount")
-                                }
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Bookmark,
-                            contentDescription = "المفضلة",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(4.dp))
-
-                // AI Assistant Button
-                Surface(
-                    onClick = onOpenAiChat,
-                    shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.testTag("top_bar_ai_chat_button")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "مساعد ذكي",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "المساعد",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            text = "مرحباً بك، $studentName",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
+
+                // Left: Actions
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Search/DeepLink Tester (Subtle)
+                    IconButton(
+                        onClick = onOpenDeepLinkTester,
+                        modifier = Modifier.testTag("top_bar_deep_link_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Link,
+                            contentDescription = "رابط عميق",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Notifications
+                    IconButton(
+                        onClick = onOpenNotifications,
+                        modifier = Modifier.testTag("top_bar_notifications_button")
+                    ) {
+                        BadgedBox(
+                            badge = {
+                                if (unreadNotificationsCount > 0) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError,
+                                        modifier = Modifier.offset(x = (-4).dp, y = 4.dp)
+                                    ) {
+                                        Text(text = "$unreadNotificationsCount")
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "التنبيهات",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    // Favorites
+                    IconButton(
+                        onClick = onOpenFavorites,
+                        modifier = Modifier.testTag("top_bar_favorites_button")
+                    ) {
+                        BadgedBox(
+                            badge = {
+                                if (favoritesCount > 0) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.secondary,
+                                        contentColor = MaterialTheme.colorScheme.onSecondary,
+                                        modifier = Modifier.offset(x = (-4).dp, y = 4.dp)
+                                    ) {
+                                        Text(text = "$favoritesCount")
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Bookmark,
+                                contentDescription = "المفضلة",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // AI Assistant Highlight Button
+                    Surface(
+                        onClick = onOpenAiChat,
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.testTag("top_bar_ai_chat_button"),
+                        tonalElevation = 2.dp
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BadgedBox(
+                                badge = {
+                                    if (unreadAiMessagesCount > 0) {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.offset(x = (-4).dp, y = 4.dp)
+                                        ) {
+                                            Text(text = "$unreadAiMessagesCount")
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "مساعد ذكي",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
+            // Subtle Divider
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                thickness = 0.5.dp
+            )
         }
     }
 }
