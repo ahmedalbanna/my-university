@@ -34,6 +34,7 @@ fun MoreScreen(
     onOpenGpaCalculator: () -> Unit,
     onOpenLibraries: () -> Unit,
     onOpenResults: () -> Unit,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val services = listOf(
@@ -108,6 +109,33 @@ fun MoreScreen(
         ) {
             items(services) { service ->
                 ServiceCard(service)
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Card(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Logout,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "تسجيل الخروج",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             }
         }
     }

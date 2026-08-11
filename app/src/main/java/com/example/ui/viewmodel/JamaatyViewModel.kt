@@ -46,6 +46,24 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     private val _studentProfile = MutableStateFlow(StudentProfile())
     val studentProfile: StateFlow<StudentProfile> = _studentProfile.asStateFlow()
 
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
+    fun login(email: String, pass: String) {
+        _isLoggedIn.value = true
+    }
+
+    fun signUp(email: String, pass: String) {
+        // Here we could clear the profile for a new user if needed
+        _studentProfile.value = StudentProfile()
+        _isLoggedIn.value = true
+    }
+
+    fun logout() {
+        _isLoggedIn.value = false
+        _studentProfile.value = StudentProfile()
+    }
+
     // Level & Faculty Filters
     private val _selectedLevel = MutableStateFlow(3) // Default level 3
     val selectedLevel: StateFlow<Int> = _selectedLevel.asStateFlow()

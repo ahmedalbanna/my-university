@@ -49,6 +49,7 @@ import com.example.ui.screens.more.WorldLibrariesScreen
 import com.example.ui.screens.notifications.NotificationScreen
 import com.example.ui.screens.onboarding.OnboardingScreen
 import com.example.ui.screens.onboarding.ProfileSetupScreen
+import com.example.ui.screens.onboarding.AuthScreen
 import com.example.ui.screens.courses.CoursesScreen
 import com.example.ui.screens.schedule.ScheduleScreen
 import com.example.ui.screens.favorites.FavoritesScreen
@@ -74,6 +75,7 @@ fun JamaatyApp(
     var showWorldLibraries by remember { mutableStateOf(false) }
 
     // Observe ViewModel state
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
     val profile by viewModel.studentProfile.collectAsState()
     val selectedLevel by viewModel.selectedLevel.collectAsState()
     val selectedSemester by viewModel.selectedSemester.collectAsState()
@@ -182,6 +184,11 @@ fun JamaatyApp(
         if (!onboardingCompleted) {
             OnboardingScreen(
                 onFinish = { viewModel.completeOnboarding() }
+            )
+        } else if (!isLoggedIn) {
+            AuthScreen(
+                onLoginSuccess = { email, pass -> viewModel.login(email, pass) },
+                onSignUpSuccess = { email, pass -> viewModel.signUp(email, pass) }
             )
         } else if (profile.name.isEmpty()) {
             ProfileSetupScreen(
@@ -313,7 +320,8 @@ fun JamaatyApp(
                                 onNavigateToTranslate = { showTranslate = true },
                                 onOpenGpaCalculator = { showGpaCalculator = true },
                                 onOpenLibraries = { showWorldLibraries = true },
-                                onOpenResults = { currentTab = BottomTab.Results }
+                                onOpenResults = { currentTab = BottomTab.Results },
+                                onLogout = { viewModel.logout() }
                             )
                         }
                     }
