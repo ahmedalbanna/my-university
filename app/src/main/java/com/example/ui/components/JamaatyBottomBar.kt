@@ -8,13 +8,19 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Grade
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.Grade
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -39,13 +45,15 @@ sealed class BottomTab(
 ) {
     object Home : BottomTab("home", "الرئيسية", Icons.Filled.Home, Icons.Outlined.Home)
     object Library : BottomTab("library", "المكتبة", Icons.Filled.MenuBook, Icons.Outlined.MenuBook)
+    object Results : BottomTab("results", "النتائج", Icons.Filled.Grade, Icons.Outlined.Grade)
     object Exams : BottomTab("exams", "الاختبارات", Icons.Filled.Assignment, Icons.Outlined.Assignment)
+    object Favorites : BottomTab("favorites", "المفضلة", Icons.Filled.Bookmark, Icons.Outlined.Bookmark)
     object Wallet : BottomTab("wallet", "المحفظة", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet)
-    object TranslateMore : BottomTab("translate_more", "المزيد", Icons.Filled.Translate, Icons.Outlined.Translate)
+    object More : BottomTab("more", "المزيد", Icons.Filled.MoreHoriz, Icons.Outlined.MoreHoriz)
 
     companion object {
         val list: List<BottomTab>
-            get() = listOf(Home, Library, Exams, Wallet, TranslateMore)
+            get() = listOf(Home, Library, Exams, Wallet, More)
     }
 }
 

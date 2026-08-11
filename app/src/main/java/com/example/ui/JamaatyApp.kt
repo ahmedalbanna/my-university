@@ -2,10 +2,16 @@ package com.example.ui
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -34,11 +40,15 @@ import com.example.ui.screens.exams.ExamsScreen
 import com.example.ui.screens.gpa.GpaCalculatorScreen
 import com.example.ui.screens.home.HomeScreen
 import com.example.ui.screens.library.LibraryScreen
-import com.example.ui.screens.more.TranslateMoreScreen
+import com.example.ui.screens.more.MoreScreen
+import com.example.ui.screens.more.TranslateScreen
+import com.example.ui.screens.more.WorldLibrariesScreen
 import com.example.ui.screens.notifications.NotificationScreen
 import com.example.ui.screens.onboarding.OnboardingScreen
 import com.example.ui.screens.courses.CoursesScreen
 import com.example.ui.screens.schedule.ScheduleScreen
+import com.example.ui.screens.favorites.FavoritesScreen
+import com.example.ui.screens.results.ResultsScreen
 import com.example.ui.screens.wallet.WalletScreen
 import com.example.ui.viewmodel.JamaatyViewModel
 
@@ -56,6 +66,8 @@ fun JamaatyApp(
     var showGpaCalculator by remember { mutableStateOf(false) }
     var showSchedule by remember { mutableStateOf(false) }
     var showCourses by remember { mutableStateOf(false) }
+    var showTranslate by remember { mutableStateOf(false) }
+    var showWorldLibraries by remember { mutableStateOf(false) }
 
     // Observe ViewModel state
     val profile by viewModel.studentProfile.collectAsState()
@@ -131,7 +143,7 @@ fun JamaatyApp(
     }
 
     // System Back Handler Refinement
-    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || showSchedule || showCourses || currentTab != BottomTab.Home) {
+    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || showSchedule || showCourses || showTranslate || showWorldLibraries || currentTab != BottomTab.Home) {
         when {
             showAiChatSheet -> showAiChatSheet = false
             showDeepLinkDialog -> showDeepLinkDialog = false
@@ -139,6 +151,8 @@ fun JamaatyApp(
             showGpaCalculator -> showGpaCalculator = false
             showSchedule -> showSchedule = false
             showCourses -> showCourses = false
+            showTranslate -> showTranslate = false
+            showWorldLibraries -> showWorldLibraries = false
             currentTab != BottomTab.Home -> currentTab = BottomTab.Home
         }
     }
@@ -181,7 +195,7 @@ fun JamaatyApp(
                     unreadNotificationsCount = unreadNotificationsCount,
                     unreadAiMessagesCount = unreadAiMessagesCount,
                     onOpenAiChat = { showAiChatSheet = true },
-                    onOpenFavorites = { currentTab = BottomTab.TranslateMore },
+                    onOpenFavorites = { currentTab = BottomTab.Favorites },
                     onOpenNotifications = { showNotifications = true },
                     onOpenDeepLinkTester = { showDeepLinkDialog = true }
                 )
@@ -201,19 +215,31 @@ fun JamaatyApp(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                Crossfade(targetState = currentTab, label = "TabCrossfade") { tab ->
+                AnimatedContent(
+                    targetState = currentTab,
+                    transitionSpec = {
+                        val direction = if (BottomTab.list.indexOf(targetState) > BottomTab.list.indexOf(initialState)) 1 else -1
+                        (fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                            animationSpec = tween(300),
+                            initialOffsetX = { it * direction }
+                        )) togetherWith (fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                            animationSpec = tween(300),
+                            targetOffsetX = { -it * direction }
+                        ))
+                    },
+                    label = "TabTransition"
+                ) { tab ->
                     when (tab) {
                         BottomTab.Home -> {
                             HomeScreen(
                                 profile = profile,
-                                selectedLevel = selectedLevel,
                                 recommendedBooks = viewModel.getFilteredBooks(),
-                                onSelectLevel = { lvl -> viewModel.setLevel(lvl) },
                                 onNavigateToTab = { route ->
                                     BottomTab.list.find { it.route == route }?.let { currentTab = it }
                                 },
                                 onNavigateToSchedule = { showSchedule = true },
                                 onNavigateToCourses = { showCourses = true },
+                                onOpenResults = { currentTab = BottomTab.Results },
                                 onToggleFavorite = { id, type, title, sub, fac ->
                                     viewModel.toggleFavorite(id, type, title, sub, fac)
                                 },
@@ -222,29 +248,17 @@ fun JamaatyApp(
                         }
                         BottomTab.Library -> {
                             LibraryScreen(
-                                selectedLevel = selectedLevel,
-                                selectedSemester = selectedSemester,
-                                selectedFaculty = selectedFaculty,
-                                faculties = viewModel.getFaculties(),
+                                profile = profile,
                                 books = viewModel.getFilteredBooks(),
                                 projects = viewModel.getFilteredProjects(),
-                                worldLibraries = viewModel.getWorldLibraries(),
                                 bookSearchQuery = bookQuery,
                                 projectSearchQuery = projectQuery,
-                                projectYearFilter = projectYear,
-                                onSelectLevel = { lvl -> viewModel.setLevel(lvl) },
-                                onSelectSemester = { sem -> viewModel.setSemester(sem) },
-                                onSelectFaculty = { fac -> viewModel.setFaculty(fac) },
                                 onBookSearchChange = { q -> viewModel.setBookSearchQuery(q) },
                                 onProjectSearchChange = { q -> viewModel.setProjectSearchQuery(q) },
-                                onProjectYearChange = { yr -> viewModel.setProjectYearFilter(yr) },
                                 onToggleFavorite = { id, type, title, sub, fac ->
                                     viewModel.toggleFavorite(id, type, title, sub, fac)
                                 },
-                                isFavorite = { id -> favorites.any { it.id == id } },
-                                onAddNewProject = { title, student, supervisor, faculty, year, level, summary, tags ->
-                                    viewModel.addNewProject(title, student, supervisor, faculty, year, level, summary, tags)
-                                }
+                                isFavorite = { id -> favorites.any { it.id == id } }
                             )
                         }
                         BottomTab.Exams -> {
@@ -272,20 +286,26 @@ fun JamaatyApp(
                                 }
                             )
                         }
-                        BottomTab.TranslateMore -> {
-                            TranslateMoreScreen(
-                                translationInput = translationInput,
-                                translationOutput = translationOutput,
-                                isTranslating = isTranslating,
-                                vocabularyCards = viewModel.getVocabularyCards(),
-                                worldLibraries = viewModel.getWorldLibraries(),
-                                examResults = viewModel.getExamResults(),
+                        BottomTab.Favorites -> {
+                            FavoritesScreen(
                                 favorites = favorites,
-                                onTranslateInput = { text -> viewModel.translateText(text) },
                                 onToggleFavorite = { id, type, title, sub, fac ->
                                     viewModel.toggleFavorite(id, type, title, sub, fac)
-                                },
+                                }
+                            )
+                        }
+                        BottomTab.Results -> {
+                            ResultsScreen(
+                                examResults = viewModel.getExamResults(),
                                 onOpenGpaCalculator = { showGpaCalculator = true }
+                            )
+                        }
+                        BottomTab.More -> {
+                            MoreScreen(
+                                onNavigateToTranslate = { showTranslate = true },
+                                onOpenGpaCalculator = { showGpaCalculator = true },
+                                onOpenLibraries = { showWorldLibraries = true },
+                                onOpenResults = { currentTab = BottomTab.Results }
                             )
                         }
                     }
@@ -356,6 +376,50 @@ fun JamaatyApp(
                 onBack = { showCourses = false }
             )
         }
+
+        AnimatedVisibility(
+            visible = showTranslate,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            TranslateScreen(
+                translationInput = translationInput,
+                translationOutput = translationOutput,
+                isTranslating = isTranslating,
+                vocabularyCards = viewModel.getVocabularyCards(),
+                onTranslateInput = { text -> viewModel.translateText(text) },
+                onBack = { showTranslate = false }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showWorldLibraries,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            WorldLibrariesScreen(
+                worldLibraries = viewModel.getWorldLibraries(),
+                books = viewModel.getGlobalFilteredBooks(),
+                projects = viewModel.getGlobalFilteredProjects(),
+                faculties = viewModel.getFaculties(),
+                selectedFaculty = selectedFaculty,
+                selectedLevel = selectedLevel,
+                selectedSemester = selectedSemester,
+                projectYearFilter = projectYear,
+                bookQuery = bookQuery,
+                projectQuery = projectQuery,
+                onSelectFaculty = { viewModel.setFaculty(it) },
+                onSelectLevel = { viewModel.setLevel(it) },
+                onSelectSemester = { viewModel.setSemester(it) },
+                onProjectYearChange = { yr -> viewModel.setProjectYearFilter(yr) },
+                onBookSearchChange = { q -> viewModel.setBookSearchQuery(q) },
+                onProjectSearchChange = { q -> viewModel.setProjectSearchQuery(q) },
+                onAddProject = { title, student, supervisor, faculty, year, level, summary, tags ->
+                    viewModel.addNewProject(title, student, supervisor, faculty, year, level, summary, tags)
+                },
+                onBack = { showWorldLibraries = false }
+            )
+        }
+        }
     }
-}
 }

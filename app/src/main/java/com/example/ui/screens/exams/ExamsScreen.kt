@@ -1,6 +1,7 @@
 package com.example.ui.screens.exams
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -293,7 +294,21 @@ fun ExamsScreen(
                 }
             }
         } else {
-            if (activeSubTab == 1) {
+            AnimatedContent(
+            targetState = activeSubTab,
+            transitionSpec = {
+                val direction = if (targetState > initialState) 1 else -1
+                (fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { it * direction }
+                )) togetherWith (fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                    animationSpec = tween(300),
+                    targetOffsetX = { -it * direction }
+                ))
+            },
+            label = "SubTabTransition"
+        ) { subTab ->
+            if (subTab == 1) {
                 // INTERACTIVE QUIZ MODE
                 Column(
                     modifier = Modifier
@@ -462,6 +477,7 @@ fun ExamsScreen(
             }
         }
     }
+}
 
     // Modal Sheet for Revision & Version History Log
     selectedQuestionForHistory?.let { q ->

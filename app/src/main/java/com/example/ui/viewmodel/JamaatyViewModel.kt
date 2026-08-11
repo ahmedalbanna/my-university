@@ -392,8 +392,23 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         _selectedQuestionTag.value = tag
     }
 
-    // Books list filtered by level, semester, faculty, search
+    // Books list filtered ONLY by student's current profile (Fixed Scope)
     fun getFilteredBooks(): List<Book> {
+        val profile = _studentProfile.value
+        return repository.getBooks().filter { book ->
+            val matchLevel = (book.level == profile.level)
+            val matchSemester = (book.semester == profile.semester)
+            val matchFaculty = (book.faculty == profile.faculty)
+            val matchSearch = _bookSearchQuery.value.isEmpty() ||
+                    book.title.contains(_bookSearchQuery.value, ignoreCase = true) ||
+                    book.author.contains(_bookSearchQuery.value, ignoreCase = true)
+
+            matchLevel && matchSemester && matchFaculty && matchSearch
+        }
+    }
+
+    // Global Books search for World Library (Variable Scope)
+    fun getGlobalFilteredBooks(): List<Book> {
         return repository.getBooks().filter { book ->
             val matchLevel = (book.level == _selectedLevel.value)
             val matchSemester = (book.semester == _selectedSemester.value)
@@ -436,18 +451,34 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         _userProjects.value = _userProjects.value + newProj
     }
 
-    // Researches & Projects filtered
+    // Researches & Projects filtered for Student's Library (Fixed Faculty/Level)
     fun getFilteredProjects(): List<Project> {
+        val profile = _studentProfile.value
+        val allProjects = repository.getProjects() + _userProjects.value
+        return allProjects.filter { proj ->
+            val matchFaculty = (proj.faculty == profile.faculty)
+            val matchLevel = (proj.level == profile.level)
+            val matchSearch = _projectSearchQuery.value.isEmpty() ||
+                    proj.title.contains(_projectSearchQuery.value, ignoreCase = true) ||
+                    proj.studentName.contains(_projectSearchQuery.value, ignoreCase = true)
+
+            matchFaculty && matchLevel && matchSearch
+        }
+    }
+
+    // Researches & Projects filtered for Global Search
+    fun getGlobalFilteredProjects(): List<Project> {
         val allProjects = repository.getProjects() + _userProjects.value
         return allProjects.filter { proj ->
             val matchFaculty = (_selectedFaculty.value == "الكل" || proj.faculty == _selectedFaculty.value)
+            val matchLevel = (proj.level == _selectedLevel.value)
             val matchYear = (_projectYearFilter.value == "الكل" || proj.year == _projectYearFilter.value)
             val matchSearch = _projectSearchQuery.value.isEmpty() ||
                     proj.title.contains(_projectSearchQuery.value, ignoreCase = true) ||
                     proj.studentName.contains(_projectSearchQuery.value, ignoreCase = true) ||
                     proj.tags.any { it.contains(_projectSearchQuery.value, ignoreCase = true) }
 
-            matchFaculty && matchYear && matchSearch
+            matchFaculty && matchLevel && matchYear && matchSearch
         }
     }
 

@@ -1,9 +1,8 @@
 package com.example.ui.screens.wallet
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -318,9 +317,22 @@ fun WalletScreen(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Tab Content Pages
-        when (activeTab) {
-            0 -> {
+        AnimatedContent(
+            targetState = activeTab,
+            transitionSpec = {
+                val direction = if (targetState > initialState) 1 else -1
+                (fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { it * direction }
+                )) togetherWith (fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                    animationSpec = tween(300),
+                    targetOffsetX = { -it * direction }
+                ))
+            },
+            label = "SubTabTransition"
+        ) { tab ->
+            when (tab) {
+                0 -> {
                 // TUITION FEES PAYMENT FLOW
                 LazyColumn(
                     modifier = Modifier
@@ -717,6 +729,7 @@ fun WalletScreen(
             }
         }
     }
+}
 
     // Payment Processing Modal Sheet
     if (showPaymentModal && selectedServiceForPay != null) {

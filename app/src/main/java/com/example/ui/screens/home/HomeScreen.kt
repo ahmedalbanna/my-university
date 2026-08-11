@@ -60,12 +60,11 @@ import com.example.ui.components.DigitalStudentCard
 @Composable
 fun HomeScreen(
     profile: StudentProfile,
-    selectedLevel: Int,
     recommendedBooks: List<Book>,
-    onSelectLevel: (Int) -> Unit,
     onNavigateToTab: (String) -> Unit,
     onNavigateToSchedule: () -> Unit,
     onNavigateToCourses: () -> Unit,
+    onOpenResults: () -> Unit,
     onToggleFavorite: (String, String, String, String, String) -> Unit,
     isFavorite: (String) -> Boolean
 ) {
@@ -158,6 +157,7 @@ fun HomeScreen(
 
                         // GPA Badge
                         Surface(
+                            onClick = onOpenResults,
                             shape = RoundedCornerShape(20.dp),
                             color = Color.White.copy(alpha = 0.15f),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
@@ -179,60 +179,6 @@ fun HomeScreen(
                                     fontSize = 18.sp
                                 )
                             }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Academic Level Selector Chips
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.Star,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "تحديد المستوى الدراسي الحالي:",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                (1..5).forEach { level ->
-                    val isSelected = (level == selectedLevel)
-                    Surface(
-                        onClick = { onSelectLevel(level) },
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("level_chip_$level")
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "مستوى $level",
-                                fontSize = 12.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            )
                         }
                     }
                 }
@@ -387,7 +333,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "مراجع موصى بها (المستوى $selectedLevel)",
+                        text = "مراجع موصى بها (المستوى ${profile.level})",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface

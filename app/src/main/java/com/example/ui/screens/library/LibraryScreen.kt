@@ -2,7 +2,8 @@ package com.example.ui.screens.library
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,37 +39,25 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.Book
 import com.example.data.model.Project
-import com.example.data.model.WorldLibrary
+import com.example.data.model.StudentProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
-    selectedLevel: Int,
-    selectedSemester: Int,
-    selectedFaculty: String,
-    faculties: List<String>,
+    profile: StudentProfile,
     books: List<Book>,
     projects: List<Project>,
-    worldLibraries: List<WorldLibrary> = emptyList(),
     bookSearchQuery: String,
     projectSearchQuery: String,
-    projectYearFilter: String,
-    onSelectLevel: (Int) -> Unit,
-    onSelectSemester: (Int) -> Unit,
-    onSelectFaculty: (String) -> Unit,
     onBookSearchChange: (String) -> Unit,
     onProjectSearchChange: (String) -> Unit,
-    onProjectYearChange: (String) -> Unit,
     onToggleFavorite: (String, String, String, String, String) -> Unit,
-    isFavorite: (String) -> Boolean,
-    onAddNewProject: ((title: String, studentName: String, supervisor: String, faculty: String, year: String, level: Int, summary: String, tags: List<String>) -> Unit)? = null
+    isFavorite: (String) -> Boolean
 ) {
-    var activeSubTab by remember { mutableIntStateOf(0) } // 0: الكتب والإنتاج, 1: الأبحاث والمشاريع, 2: المكتبات العالمية
+    var activeSubTab by remember { mutableIntStateOf(0) } // 0: الكتب والإنتاج, 1: الأبحاث والمشاريع
     var selectedCategoryFilter by remember { mutableStateOf("الكل") }
     var selectedBookForReader by remember { mutableStateOf<Book?>(null) }
     var selectedProjectForDetails by remember { mutableStateOf<Project?>(null) }
-    var selectedWorldLibForView by remember { mutableStateOf<WorldLibrary?>(null) }
-    var showAddProjectDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -123,7 +112,7 @@ fun LibraryScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "${books.size} كتاب مقرر • ${projects.size} بحث تخرج • ${worldLibraries.size} مكتبة عالمية",
+                            text = "${books.size} كتاب مقرر • ${projects.size} بحث تخرج",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -149,8 +138,7 @@ fun LibraryScreen(
             ) {
                 val tabs = listOf(
                     0 to "📚 الكتب والمراجع",
-                    1 to "🔬 الأبحاث والمشاريع",
-                    2 to "🌐 المكتبات العالمية"
+                    1 to "🔬 الأبحاث والمشاريع"
                 )
 
                 tabs.forEach { (index, title) ->
@@ -178,92 +166,26 @@ fun LibraryScreen(
             }
         }
 
-        // Shared Level and Faculty Filter Bar (For Books & Projects)
-        if (activeSubTab != 2) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    // Faculty Selector Chips
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "الكلية:",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            items(faculties) { faculty ->
-                                val isSelected = selectedFaculty == faculty
-                                Surface(
-                                    onClick = { onSelectFaculty(faculty) },
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    border = if (isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.secondary) else null
-                                ) {
-                                    Text(
-                                        text = faculty,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Level 1 to 5 Selector
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        (1..5).forEach { level ->
-                            val isSelected = (level == selectedLevel)
-                            Surface(
-                                onClick = { onSelectLevel(level) },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("lib_level_chip_$level")
-                            ) {
-                                Box(
-                                    modifier = Modifier.padding(vertical = 7.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "مستوى $level",
-                                        fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        when (activeSubTab) {
-            0 -> {
+        AnimatedContent(
+            targetState = activeSubTab,
+            transitionSpec = {
+                val direction = if (targetState > initialState) 1 else -1
+                (fadeIn(animationSpec = tween(300)) + slideInHorizontally(
+                    animationSpec = tween(300),
+                    initialOffsetX = { it * direction }
+                )) togetherWith (fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                    animationSpec = tween(300),
+                    targetOffsetX = { -it * direction }
+                ))
+            },
+            label = "SubTabTransition"
+        ) { subTab ->
+            when (subTab) {
+                0 -> {
                 // BOOKS & COURSE MATERIALS SECTION
                 val categories = listOf("الكل", "كتاب مقرر", "مرجع أساسي", "ملخص دراسي")
                 val filteredBooks = books.filter { book ->
-                    selectedCategoryFilter == "الكل" || book.category.contains(selectedCategoryFilter, ignoreCase = true)
+                    (selectedCategoryFilter == "الكل" || book.category.contains(selectedCategoryFilter, ignoreCase = true))
                 }
 
                 Column(
@@ -271,52 +193,6 @@ fun LibraryScreen(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp, vertical = 4.dp)
                 ) {
-                    // Semester 1 vs Semester 2 Segmented Row
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(3.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Surface(
-                                onClick = { onSelectSemester(1) },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (selectedSemester == 1) MaterialTheme.colorScheme.secondary else Color.Transparent,
-                                contentColor = if (selectedSemester == 1) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(text = "الفصل الأول (Semester 1)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                }
-                            }
-
-                            Surface(
-                                onClick = { onSelectSemester(2) },
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (selectedSemester == 2) MaterialTheme.colorScheme.secondary else Color.Transparent,
-                                contentColor = if (selectedSemester == 2) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(text = "الفصل الثاني (Semester 2)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     // Category Chips & Search
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -371,7 +247,7 @@ fun LibraryScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "كتب المستوى $selectedLevel • الفصل $selectedSemester (${filteredBooks.size} كتاب):",
+                        text = "كتب المستوى ${profile.level} • الفصل ${profile.semester} (${filteredBooks.size} كتاب):",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -405,7 +281,7 @@ fun LibraryScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "حاول تغيير المستوى الدراسي أو الكلية أو كلمة البحث",
+                                    text = "حاول تغيير المستوى الدراسي أو الكلية من المكتبة العالمية.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -439,6 +315,8 @@ fun LibraryScreen(
             }
             1 -> {
                 // RESEARCHES & GRADUATION PROJECTS SECTION
+                val filteredProjects = projects
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -471,16 +349,6 @@ fun LibraryScreen(
                                     color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { showAddProjectDialog = true },
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("إضافة مشروع", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
                         }
                     }
 
@@ -492,7 +360,7 @@ fun LibraryScreen(
                         OutlinedTextField(
                             value = projectSearchQuery,
                             onValueChange = onProjectSearchChange,
-                            placeholder = { Text("بحث عن أبحاث بالاسم أو الكلية...", fontSize = 12.sp) },
+                            placeholder = { Text("بحث عن أبحاث بالاسم...", fontSize = 12.sp) },
                             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
                             trailingIcon = if (projectSearchQuery.isNotEmpty()) {
                                 {
@@ -502,33 +370,17 @@ fun LibraryScreen(
                                 }
                             } else null,
                             modifier = Modifier
-                                .weight(1f)
+                                .fillMaxWidth()
                                 .testTag("project_search_field"),
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp)
                         )
-
-                        // Year Filter Chips
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            items(listOf("الكل", "2026", "2025", "2024")) { yr ->
-                                val isSelected = (projectYearFilter == yr)
-                                Surface(
-                                    onClick = { onProjectYearChange(yr) },
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                                ) {
-                                    Text(text = yr, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp))
-                                }
-                            }
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "أبحاث ومشاريع التخرج الموثقة (${projects.size} مشروع):",
+                        text = "أبحاث ومشاريع التخرج الموثقة (${filteredProjects.size} مشروع):",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -540,7 +392,7 @@ fun LibraryScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        items(projects) { proj ->
+                        items(filteredProjects) { proj ->
                             val isFav = isFavorite(proj.id)
                             ProjectCard(
                                 project = proj,
@@ -560,63 +412,9 @@ fun LibraryScreen(
                     }
                 }
             }
-            2 -> {
-                // WORLD LIBRARIES & DIGITAL PORTALS SECTION
-                var worldLibQuery by remember { mutableStateOf("") }
-                val filteredWorldLibs = worldLibraries.filter {
-                    it.nameAr.contains(worldLibQuery, ignoreCase = true) ||
-                            it.nameEn.contains(worldLibQuery, ignoreCase = true) ||
-                            it.description.contains(worldLibQuery, ignoreCase = true)
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                ) {
-                    OutlinedTextField(
-                        value = worldLibQuery,
-                        onValueChange = { worldLibQuery = it },
-                        placeholder = { Text("بحث في المكتبات الرقمية والقواعد العالمية...", fontSize = 12.sp) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                        trailingIcon = if (worldLibQuery.isNotEmpty()) {
-                            {
-                                IconButton(onClick = { worldLibQuery = "" }) {
-                                    Icon(Icons.Default.Close, contentDescription = "مسح", modifier = Modifier.size(18.dp))
-                                }
-                            }
-                        } else null,
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "المكتبات الرقمية العالمية الشريكة (${filteredWorldLibs.size}):",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(bottom = 16.dp)
-                    ) {
-                        items(filteredWorldLibs) { lib ->
-                            WorldLibraryCard(
-                                library = lib,
-                                onClick = { selectedWorldLibForView = lib }
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
+}
 
     // Modal Sheet for Book Reader & E-Book Interactive Viewer
     selectedBookForReader?.let { book ->
@@ -636,59 +434,6 @@ fun LibraryScreen(
             project = proj,
             onDismiss = { selectedProjectForDetails = null },
             context = context
-        )
-    }
-
-    // Dialog for World Library URL preview
-    selectedWorldLibForView?.let { lib ->
-        AlertDialog(
-            onDismissRequest = { selectedWorldLibForView = null },
-            icon = { Icon(Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text(lib.nameAr, fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    Text(lib.nameEn, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(lib.description, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = lib.url,
-                            modifier = Modifier.padding(8.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    Toast.makeText(context, "جاري فتح ${lib.nameAr} في المتصفح...", Toast.LENGTH_SHORT).show()
-                    selectedWorldLibForView = null
-                }) {
-                    Text("انتقال للموقع")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { selectedWorldLibForView = null }) {
-                    Text("إغلاق")
-                }
-            }
-        )
-    }
-
-    if (showAddProjectDialog) {
-        AddProjectDialog(
-            faculties = faculties,
-            onDismiss = { showAddProjectDialog = false },
-            onSubmit = { title, studentName, supervisor, faculty, year, level, summary, tags ->
-                onAddNewProject?.invoke(title, studentName, supervisor, faculty, year, level, summary, tags)
-                Toast.makeText(context, "تم توثيق ونشر المشروع في المكتبة الجامعية بنجاح!", Toast.LENGTH_SHORT).show()
-            }
         )
     }
 }
@@ -1298,189 +1043,4 @@ fun ProjectDetailsBottomSheet(
             }
         }
     }
-}
-
-@Composable
-fun WorldLibraryCard(
-    library: WorldLibrary,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.tertiaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = library.nameAr,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = library.nameEn,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = library.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Icon(
-                Icons.Default.OpenInNew,
-                contentDescription = "فتح الرابط",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddProjectDialog(
-    faculties: List<String>,
-    onDismiss: () -> Unit,
-    onSubmit: (title: String, studentName: String, supervisor: String, faculty: String, year: String, level: Int, summary: String, tags: List<String>) -> Unit
-) {
-    var title by remember { mutableStateOf("") }
-    var studentName by remember { mutableStateOf("") }
-    var supervisor by remember { mutableStateOf("") }
-    var selectedFaculty by remember { mutableStateOf(if (faculties.isNotEmpty() && faculties.first() != "الكل") faculties.first() else "كلية الحاسوب وتكنولوجيا المعلومات") }
-    var selectedYear by remember { mutableStateOf("2026") }
-    var selectedLevel by remember { mutableIntStateOf(4) }
-    var summary by remember { mutableStateOf("") }
-    var tagsInput by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text("إضافة مشروع تخرج / بحث جديد", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("عنوان البحث / المشروع") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                OutlinedTextField(
-                    value = studentName,
-                    onValueChange = { studentName = it },
-                    label = { Text("اسم الطالب / أعضاء الفريق") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                OutlinedTextField(
-                    value = supervisor,
-                    onValueChange = { supervisor = it },
-                    label = { Text("اسم المشرف العلمي (الدكتور)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Text("الكلية المعنية:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    items(faculties.filter { it != "الكل" }) { fac ->
-                        FilterChip(
-                            selected = (selectedFaculty == fac),
-                            onClick = { selectedFaculty = fac },
-                            label = { Text(fac, fontSize = 10.sp) }
-                        )
-                    }
-                }
-
-                Text("السنة الدراسية:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    items(listOf("2026", "2025", "2024", "2023")) { yr ->
-                        FilterChip(
-                            selected = (selectedYear == yr),
-                            onClick = { selectedYear = yr },
-                            label = { Text(yr, fontSize = 10.sp) }
-                        )
-                    }
-                }
-
-                OutlinedTextField(
-                    value = summary,
-                    onValueChange = { summary = it },
-                    label = { Text("ملخص ومخرجات المشروع") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(90.dp),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                OutlinedTextField(
-                    value = tagsInput,
-                    onValueChange = { tagsInput = it },
-                    label = { Text("الكلمات المفتاحية (تفصل بفاصلة)") },
-                    placeholder = { Text("مثال: ذكاء اصطناعي, طاقة, أمن") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (title.isBlank() || studentName.isBlank()) return@Button
-                    val tags = tagsInput.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                    onSubmit(
-                        title,
-                        studentName,
-                        supervisor.ifBlank { "د. مشرف القسم" },
-                        selectedFaculty,
-                        selectedYear,
-                        selectedLevel,
-                        summary.ifBlank { "مشروع تخرج موثق ومدرج بالجامعة." },
-                        if (tags.isEmpty()) listOf("مشروع تخرج", selectedFaculty) else tags
-                    )
-                    onDismiss()
-                },
-                enabled = title.isNotBlank() && studentName.isNotBlank(),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text("نشر المشروع")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("إلغاء")
-            }
-        }
-    )
 }

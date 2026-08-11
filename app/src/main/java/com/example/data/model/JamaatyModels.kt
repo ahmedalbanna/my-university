@@ -92,6 +92,7 @@ data class StudentProfile(
     val faculty: String = "كلية الحاسبات والمعلومات",
     val major: String = "علوم الحاسب والذكاء الاصطناعي",
     val level: Int = 3,
+    val semester: Int = 1,
     val gpa: Double = 3.84,
     val balance: Double = 2450.00
 )
