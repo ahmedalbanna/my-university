@@ -47,6 +47,7 @@ import com.example.ui.screens.more.MoreScreen
 import com.example.ui.screens.more.TranslateScreen
 import com.example.ui.screens.more.WorldLibrariesScreen
 import com.example.ui.screens.notifications.NotificationScreen
+import com.example.ui.screens.profile.StudentProfileScreen
 import com.example.ui.screens.onboarding.OnboardingScreen
 import com.example.ui.screens.onboarding.ProfileSetupScreen
 import com.example.ui.screens.onboarding.AuthScreen
@@ -73,6 +74,7 @@ fun JamaatyApp(
     var showCourses by remember { mutableStateOf(false) }
     var showTranslate by remember { mutableStateOf(false) }
     var showWorldLibraries by remember { mutableStateOf(false) }
+    var showProfile by remember { mutableStateOf(false) }
 
     // Observe ViewModel state
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
@@ -149,7 +151,7 @@ fun JamaatyApp(
     }
 
     // System Back Handler Refinement
-    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || showSchedule || showCourses || showTranslate || showWorldLibraries || currentTab != BottomTab.Home) {
+    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || showSchedule || showCourses || showTranslate || showWorldLibraries || showProfile || currentTab != BottomTab.Home) {
         when {
             showAiChatSheet -> showAiChatSheet = false
             showDeepLinkDialog -> showDeepLinkDialog = false
@@ -159,6 +161,7 @@ fun JamaatyApp(
             showCourses -> showCourses = false
             showTranslate -> showTranslate = false
             showWorldLibraries -> showWorldLibraries = false
+            showProfile -> showProfile = false
             currentTab != BottomTab.Home -> currentTab = BottomTab.Home
         }
     }
@@ -212,6 +215,7 @@ fun JamaatyApp(
                     onOpenAiChat = { showAiChatSheet = true },
                     onOpenFavorites = { currentTab = BottomTab.Favorites },
                     onOpenNotifications = { showNotifications = true },
+                    onOpenProfile = { showProfile = true },
                     onOpenDeepLinkTester = { showDeepLinkDialog = true }
                 )
             },
@@ -321,6 +325,7 @@ fun JamaatyApp(
                                 onOpenGpaCalculator = { showGpaCalculator = true },
                                 onOpenLibraries = { showWorldLibraries = true },
                                 onOpenResults = { currentTab = BottomTab.Results },
+                                onOpenProfile = { showProfile = true },
                                 onLogout = { viewModel.logout() }
                             )
                         }
@@ -448,6 +453,20 @@ fun JamaatyApp(
                 )
             }
         }
+
+        AnimatedVisibility(
+            visible = showProfile,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it })
+        ) {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                StudentProfileScreen(
+                    profile = profile,
+                    onBack = { showProfile = false },
+                    onEditProfile = { /* Future: Implement editing */ }
+                )
+            }
         }
     }
+}
 }

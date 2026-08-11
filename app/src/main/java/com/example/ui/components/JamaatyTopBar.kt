@@ -51,6 +51,7 @@ fun JamaatyTopBar(
     onOpenAiChat: () -> Unit,
     onOpenFavorites: () -> Unit,
     onOpenNotifications: () -> Unit,
+    onOpenProfile: () -> Unit,
     onOpenDeepLinkTester: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -72,7 +73,11 @@ fun JamaatyTopBar(
             ) {
                 // Right: App Brand Section
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onOpenProfile() }
+                        .padding(4.dp)
                 ) {
                     Surface(
                         modifier = Modifier

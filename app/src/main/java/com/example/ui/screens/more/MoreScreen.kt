@@ -34,10 +34,18 @@ fun MoreScreen(
     onOpenGpaCalculator: () -> Unit,
     onOpenLibraries: () -> Unit,
     onOpenResults: () -> Unit,
+    onOpenProfile: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val services = listOf(
+        MoreServiceItem(
+            title = "الملف الشخصي",
+            subtitle = "عرض وتعديل بياناتك الأكاديمية",
+            icon = Icons.Default.Person,
+            color = MaterialTheme.colorScheme.primary,
+            onClick = onOpenProfile
+        ),
         MoreServiceItem(
             title = "المترجم الأكاديمي",
             subtitle = "ترجمة مصطلحات ونصوص علمية بدقة",
