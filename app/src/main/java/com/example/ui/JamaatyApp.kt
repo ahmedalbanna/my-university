@@ -48,6 +48,7 @@ import com.example.ui.screens.more.TranslateScreen
 import com.example.ui.screens.more.WorldLibrariesScreen
 import com.example.ui.screens.notifications.NotificationScreen
 import com.example.ui.screens.onboarding.OnboardingScreen
+import com.example.ui.screens.onboarding.ProfileSetupScreen
 import com.example.ui.screens.courses.CoursesScreen
 import com.example.ui.screens.schedule.ScheduleScreen
 import com.example.ui.screens.favorites.FavoritesScreen
@@ -180,6 +181,10 @@ fun JamaatyApp(
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         if (!onboardingCompleted) {
             OnboardingScreen(
+                onFinish = { viewModel.completeOnboarding() }
+            )
+        } else if (profile.name.isEmpty()) {
+            ProfileSetupScreen(
                 initialProfile = profile,
                 universities = viewModel.getUniversities(),
                 faculties = viewModel.getFaculties().filter { it != "الكل" },
