@@ -155,7 +155,8 @@ private fun OnboardingHeader(
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background,
-        tonalElevation = 2.dp
+        tonalElevation = 2.dp,
+        modifier = Modifier.statusBarsPadding()
     ) {
         Column(
             modifier = Modifier

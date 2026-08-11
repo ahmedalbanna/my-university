@@ -12,9 +12,12 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -338,10 +341,12 @@ fun JamaatyApp(
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it })
         ) {
-            NotificationScreen(
-                viewModel = viewModel,
-                onBack = { showNotifications = false }
-            )
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                NotificationScreen(
+                    viewModel = viewModel,
+                    onBack = { showNotifications = false }
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -349,10 +354,12 @@ fun JamaatyApp(
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it })
         ) {
-            GpaCalculatorScreen(
-                viewModel = viewModel,
-                onBack = { showGpaCalculator = false }
-            )
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                GpaCalculatorScreen(
+                    viewModel = viewModel,
+                    onBack = { showGpaCalculator = false }
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -360,10 +367,12 @@ fun JamaatyApp(
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it })
         ) {
-            ScheduleScreen(
-                viewModel = viewModel,
-                onBack = { showSchedule = false }
-            )
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                ScheduleScreen(
+                    viewModel = viewModel,
+                    onBack = { showSchedule = false }
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -371,10 +380,12 @@ fun JamaatyApp(
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it })
         ) {
-            CoursesScreen(
-                viewModel = viewModel,
-                onBack = { showCourses = false }
-            )
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                CoursesScreen(
+                    viewModel = viewModel,
+                    onBack = { showCourses = false }
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -382,14 +393,16 @@ fun JamaatyApp(
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it })
         ) {
-            TranslateScreen(
-                translationInput = translationInput,
-                translationOutput = translationOutput,
-                isTranslating = isTranslating,
-                vocabularyCards = viewModel.getVocabularyCards(),
-                onTranslateInput = { text -> viewModel.translateText(text) },
-                onBack = { showTranslate = false }
-            )
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                TranslateScreen(
+                    translationInput = translationInput,
+                    translationOutput = translationOutput,
+                    isTranslating = isTranslating,
+                    vocabularyCards = viewModel.getVocabularyCards(),
+                    onTranslateInput = { text -> viewModel.translateText(text) },
+                    onBack = { showTranslate = false }
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -397,28 +410,30 @@ fun JamaatyApp(
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it })
         ) {
-            WorldLibrariesScreen(
-                worldLibraries = viewModel.getWorldLibraries(),
-                books = viewModel.getGlobalFilteredBooks(),
-                projects = viewModel.getGlobalFilteredProjects(),
-                faculties = viewModel.getFaculties(),
-                selectedFaculty = selectedFaculty,
-                selectedLevel = selectedLevel,
-                selectedSemester = selectedSemester,
-                projectYearFilter = projectYear,
-                bookQuery = bookQuery,
-                projectQuery = projectQuery,
-                onSelectFaculty = { viewModel.setFaculty(it) },
-                onSelectLevel = { viewModel.setLevel(it) },
-                onSelectSemester = { viewModel.setSemester(it) },
-                onProjectYearChange = { yr -> viewModel.setProjectYearFilter(yr) },
-                onBookSearchChange = { q -> viewModel.setBookSearchQuery(q) },
-                onProjectSearchChange = { q -> viewModel.setProjectSearchQuery(q) },
-                onAddProject = { title, student, supervisor, faculty, year, level, summary, tags ->
-                    viewModel.addNewProject(title, student, supervisor, faculty, year, level, summary, tags)
-                },
-                onBack = { showWorldLibraries = false }
-            )
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                WorldLibrariesScreen(
+                    worldLibraries = viewModel.getWorldLibraries(),
+                    books = viewModel.getGlobalFilteredBooks(),
+                    projects = viewModel.getGlobalFilteredProjects(),
+                    faculties = viewModel.getFaculties(),
+                    selectedFaculty = selectedFaculty,
+                    selectedLevel = selectedLevel,
+                    selectedSemester = selectedSemester,
+                    projectYearFilter = projectYear,
+                    bookQuery = bookQuery,
+                    projectQuery = projectQuery,
+                    onSelectFaculty = { viewModel.setFaculty(it) },
+                    onSelectLevel = { viewModel.setLevel(it) },
+                    onSelectSemester = { viewModel.setSemester(it) },
+                    onProjectYearChange = { yr -> viewModel.setProjectYearFilter(yr) },
+                    onBookSearchChange = { q -> viewModel.setBookSearchQuery(q) },
+                    onProjectSearchChange = { q -> viewModel.setProjectSearchQuery(q) },
+                    onAddProject = { title, student, supervisor, faculty, year, level, summary, tags ->
+                        viewModel.addNewProject(title, student, supervisor, faculty, year, level, summary, tags)
+                    },
+                    onBack = { showWorldLibraries = false }
+                )
+            }
         }
         }
     }
