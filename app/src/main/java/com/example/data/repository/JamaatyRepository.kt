@@ -153,6 +153,71 @@ class JamaatyRepository(private val appDao: AppDao) {
         appDao.insertPreference(PreferenceEntity("profile_balance", profile.balance.toString()))
     }
 
+    fun getGovernorates(): List<String> = listOf(
+        "صنعاء",
+        "عدن",
+        "تعز",
+        "إب",
+        "ذمار",
+        "حضرموت",
+        "الحديدة",
+        "عمران"
+    )
+
+    fun getUniversitiesForGovernorate(governorate: String): List<String> {
+        return when (governorate) {
+            "صنعاء" -> listOf("جامعة صنعاء", "الجامعة الإماراتية الدولية - صنعاء", "جامعة العلوم والتكنولوجيا - اليمن")
+            "عدن" -> listOf("جامعة عدن")
+            "تعز" -> listOf("جامعة تعز")
+            "إب" -> listOf("جامعة إب")
+            "ذمار" -> listOf("جامعة ذمار")
+            "حضرموت" -> listOf("جامعة حضرموت", "جامعة سيئون")
+            "الحديدة" -> listOf("جامعة الحديدة")
+            "عمران" -> listOf("جامعة عمران")
+            else -> getUniversities()
+        }
+    }
+
+    fun getSemesters(): List<String> = listOf("الفصل الأول", "الفصل الثاني", "الفصل الصيفي")
+
+    data class CourseInfo(
+        val name: String,
+        val hasProjects: Boolean = false,
+        val hasResearch: Boolean = false,
+        val hasExams: Boolean = true,
+        val hasReferences: Boolean = true
+    )
+
+    fun getCourseDetails(courseName: String): CourseInfo {
+        return when {
+            courseName.contains("مشروع") || courseName.contains("تخرج") || courseName.contains("عملي") -> 
+                CourseInfo(courseName, hasProjects = true, hasResearch = true)
+            courseName.contains("ندوة") || courseName.contains("بحث") -> 
+                CourseInfo(courseName, hasResearch = true)
+            else -> CourseInfo(courseName)
+        }
+    }
+
+    fun getCourses(faculty: String, major: String, level: Int, semester: String): List<String> {
+        return when (faculty) {
+            "كلية الحاسوب وتكنولوجيا المعلومات" -> when (semester) {
+                "الفصل الأول" -> when (level) {
+                    1 -> listOf("تفاضل وتكامل 1", "مقدمة حاسوب", "لغة عربية 1", "ثقافة إسلامية 1")
+                    2 -> listOf("هياكل بيانات", "برمجة كائنية 1", "رياضيات متقطعة")
+                    else -> listOf("هندسة برمجيات", "قواعد بيانات 2", "أمن شبكات")
+                }
+                "الفصل الثاني" -> when (level) {
+                    1 -> listOf("تفاضل وتكامل 2", "برمجة 1", "لغة إنجليزية 1")
+                    2 -> listOf("خوارزميات", "نظم تشغيل", "تصميم منطقي")
+                    else -> listOf("ذكاء اصطناعي", "معالجة صور", "تنقيب بيانات")
+                }
+                else -> listOf("دورة تدريبية صيفية", "مشروع عملي")
+            }
+            "كلية الهندسة" -> listOf("فيزياء هندسية", "رسم هندسي", "ميكانيكا", "دوائر كهربائية")
+            else -> listOf("مقرر عام 1", "مقرر عام 2", "بحث تخرج")
+        }
+    }
+
     fun getUniversities(): List<String> = listOf(
         "جامعة صنعاء",
         "جامعة عدن",
@@ -220,17 +285,17 @@ class JamaatyRepository(private val appDao: AppDao) {
             fileSize = "18.5 MB"
         ),
         Book(
-            id = "b103",
-            title = "علم التشريح البشري العام والوظائف",
-            author = "د. أمة اللطيف الحيمي",
-            faculty = "كلية الطب والعلوم الصحية",
-            level = 1,
+            id = "b_ref_01",
+            title = "المرجع الشامل في الشبكات اللاسلكية",
+            author = "أندرو تانينباوم",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
+            level = 3,
             semester = 1,
-            pages = 520,
-            category = "كتاب مقرر",
-            rating = 4.9f,
-            description = "أطلس مصور وشامل لأجهزة الجسم البشري ومبادئ علم وظائف الأعضاء لطلاب الطب بالجمهورية اليمنية.",
-            fileSize = "32.0 MB"
+            pages = 850,
+            category = "مرجع أساسي",
+            rating = 5.0f,
+            description = "أهم المراجع العالمية في علم الشبكات والبروتوكولات، مترجم للعربية.",
+            fileSize = "45.1 MB"
         ),
 
         // Level 2
@@ -261,6 +326,19 @@ class JamaatyRepository(private val appDao: AppDao) {
             rating = 4.9f,
             description = "منهجيات Agile و Scrum، دورة حياة تطوير البرمجيات، واختبار الأنظمة البرمجية.",
             fileSize = "9.8 MB"
+        ),
+        Book(
+            id = "b_res_01",
+            title = "أثر التحول الرقمي على التعليم الجامعي في اليمن",
+            author = "د. أحمد البناء",
+            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
+            level = 3,
+            semester = 1,
+            pages = 45,
+            category = "بحث علمي",
+            rating = 4.9f,
+            description = "بحث محكم يتناول التحديات والفرص للتعليم الإلكتروني في الجامعات الحكومية والخاصة.",
+            fileSize = "2.4 MB"
         ),
         Book(
             id = "b302",

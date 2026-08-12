@@ -429,26 +429,34 @@ fun JamaatyApp(
             exit = slideOutVertically(targetOffsetY = { it })
         ) {
             Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
+                var currentGovernorate by remember { mutableStateOf("") }
+                var currentUniversities by remember { mutableStateOf(viewModel.getUniversities()) }
+
                 WorldLibrariesScreen(
-                    worldLibraries = viewModel.getWorldLibraries(),
                     books = viewModel.getGlobalFilteredBooks(),
                     projects = viewModel.getGlobalFilteredProjects(),
+                    governorates = viewModel.getGovernorates(),
+                    universities = currentUniversities,
                     faculties = viewModel.getFaculties(),
                     selectedFaculty = selectedFaculty,
                     selectedLevel = selectedLevel,
                     selectedSemester = selectedSemester,
                     projectYearFilter = projectYear,
-                    bookQuery = bookQuery,
-                    projectQuery = projectQuery,
+                    onSelectGovernorate = { gov ->
+                        currentGovernorate = gov
+                        currentUniversities = viewModel.getUniversitiesForGovernorate(gov)
+                    },
                     onSelectFaculty = { viewModel.setFaculty(it) },
                     onSelectLevel = { viewModel.setLevel(it) },
                     onSelectSemester = { viewModel.setSemester(it) },
                     onProjectYearChange = { yr -> viewModel.setProjectYearFilter(yr) },
-                    onBookSearchChange = { q -> viewModel.setBookSearchQuery(q) },
-                    onProjectSearchChange = { q -> viewModel.setProjectSearchQuery(q) },
                     onAddProject = { title, student, supervisor, faculty, year, level, summary, tags ->
                         viewModel.addNewProject(title, student, supervisor, faculty, year, level, summary, tags)
                     },
+                    getMajorsForFaculty = { viewModel.getMajorsForFaculty(it) },
+                    getSemesters = { viewModel.getSemesters() },
+                    getCourseDetails = { viewModel.getCourseDetails(it) },
+                    getCourses = { f, m, l, s -> viewModel.getCourses(f, m, l, s) },
                     onBack = { showWorldLibraries = false }
                 )
             }

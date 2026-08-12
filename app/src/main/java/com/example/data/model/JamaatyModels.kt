@@ -14,10 +14,11 @@ data class Book(
     val level: Int,
     val semester: Int, // 1 or 2
     val pages: Int,
-    val category: String, // "كتاب مقرر", "مرجع أساسي", "ملخص دراسي"
+    val category: String, // "كتاب مقرر", "مرجع أساسي", "ملخص دراسي", "بحث علمي"
     val rating: Float,
     val description: String,
     val fileSize: String,
+    val downloadUrl: String = "https://example.com/file.pdf",
     val isAvailable: Boolean = true
 )
 
@@ -33,7 +34,8 @@ data class Project(
     val tags: List<String>,
     val fileFormat: String = "PDF",
     val fileSize: String = "4.2 MB",
-    val downloadsCount: Int = 142
+    val downloadsCount: Int = 142,
+    val downloadUrl: String = "https://example.com/project.zip"
 )
 
 data class QuestionVersion(

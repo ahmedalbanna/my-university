@@ -225,8 +225,14 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun getGovernorates() = repository.getGovernorates()
+    fun getUniversitiesForGovernorate(governorate: String) = repository.getUniversitiesForGovernorate(governorate)
     fun getUniversities() = repository.getUniversities()
     fun getMajorsForFaculty(faculty: String) = repository.getMajorsForFaculty(faculty)
+    fun getSemesters() = repository.getSemesters()
+    fun getCourseDetails(courseName: String) = repository.getCourseDetails(courseName)
+    fun getCourses(faculty: String, major: String, level: Int, semester: String) = 
+        repository.getCourses(faculty, major, level, semester)
 
     // Search queries
     private val _bookSearchQuery = MutableStateFlow("")
