@@ -33,7 +33,6 @@ fun MoreScreen(
     onNavigateToTranslate: () -> Unit,
     onOpenGpaCalculator: () -> Unit,
     onOpenLibraries: () -> Unit,
-    onOpenResults: () -> Unit,
     onOpenProfile: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
@@ -52,13 +51,6 @@ fun MoreScreen(
             icon = Icons.Default.Translate,
             color = Color(0xFF4CAF50),
             onClick = onNavigateToTranslate
-        ),
-        MoreServiceItem(
-            title = "النتائج الأكاديمية",
-            subtitle = "عرض كشف الدرجات والمعدل التراكمي",
-            icon = Icons.Default.Grade,
-            color = Color(0xFFFF9800),
-            onClick = onOpenResults
         ),
         MoreServiceItem(
             title = "المكتبات العالمية",

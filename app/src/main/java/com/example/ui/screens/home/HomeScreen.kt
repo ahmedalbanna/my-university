@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Star
@@ -64,7 +65,6 @@ fun HomeScreen(
     onNavigateToTab: (String) -> Unit,
     onNavigateToSchedule: () -> Unit,
     onNavigateToCourses: () -> Unit,
-    onOpenResults: () -> Unit,
     onToggleFavorite: (String, String, String, String, String) -> Unit,
     isFavorite: (String) -> Boolean
 ) {
@@ -157,7 +157,6 @@ fun HomeScreen(
 
                         // GPA Badge
                         Surface(
-                            onClick = onOpenResults,
                             shape = RoundedCornerShape(20.dp),
                             color = Color.White.copy(alpha = 0.15f),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
@@ -203,12 +202,12 @@ fun HomeScreen(
                 onClick = { onNavigateToCourses() }
             )
             HomeStatCard(
-                title = "بنك الأسئلة",
-                value = "حل النماذج",
-                icon = Icons.Default.Assignment,
+                title = "المكتبات العالمية",
+                value = "بحث ومراجع",
+                icon = Icons.Default.Language,
                 color = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.weight(1f),
-                onClick = { onNavigateToTab("exams") }
+                onClick = { onNavigateToTab("world_libraries") }
             )
             HomeStatCard(
                 title = "الرصيد والرسوم",

@@ -45,15 +45,13 @@ sealed class BottomTab(
 ) {
     object Home : BottomTab("home", "الرئيسية", Icons.Filled.Home, Icons.Outlined.Home)
     object Library : BottomTab("library", "المكتبة", Icons.Filled.MenuBook, Icons.Outlined.MenuBook)
-    object Results : BottomTab("results", "النتائج", Icons.Filled.Grade, Icons.Outlined.Grade)
-    object Exams : BottomTab("exams", "الاختبارات", Icons.Filled.Assignment, Icons.Outlined.Assignment)
     object Favorites : BottomTab("favorites", "المفضلة", Icons.Filled.Bookmark, Icons.Outlined.Bookmark)
     object Wallet : BottomTab("wallet", "المحفظة", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet)
     object More : BottomTab("more", "المزيد", Icons.Filled.MoreHoriz, Icons.Outlined.MoreHoriz)
 
     companion object {
         val list: List<BottomTab>
-            get() = listOf(Home, Library, Exams, Wallet, More)
+            get() = listOf(Home, Library, Wallet, More)
     }
 }
 

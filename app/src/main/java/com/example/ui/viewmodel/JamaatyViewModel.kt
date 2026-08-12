@@ -11,12 +11,10 @@ import com.example.data.local.entities.SemesterEntity
 import com.example.data.local.entities.CourseEntity
 import com.example.data.local.entities.ScheduleEntity
 import com.example.data.model.Book
-import com.example.data.model.ExamResult
+import com.example.data.model.CourseInfo
 import com.example.data.model.Project
-import com.example.data.model.Question
 import com.example.data.model.StudentProfile
 import com.example.data.model.VocabularyCard
-import com.example.data.model.WorldLibrary
 import android.media.RingtoneManager
 import android.net.Uri
 import com.example.data.repository.JamaatyRepository
@@ -117,10 +115,10 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                 repository.addNotification(
                     NotificationEntity(
                         id = "notif_1",
-                        title = "موعد اختبار قادم",
-                        message = "اختبار مادة القانون الإداري غداً الساعة 10:00 صباحاً في القاعة 402.",
+                        title = "تحديث في الجدول الدراسي",
+                        message = "تم تغيير قاعة محاضرة الخوارزميات غداً لتصبح في معمل الحاسوب 102.",
                         timestamp = System.currentTimeMillis() - 3600000,
-                        type = "EXAM"
+                        type = "GENERAL"
                     )
                 )
                 repository.addNotification(
@@ -244,25 +242,6 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     private val _projectYearFilter = MutableStateFlow("الكل")
     val projectYearFilter: StateFlow<String> = _projectYearFilter.asStateFlow()
 
-    private val _questionSearchQuery = MutableStateFlow("")
-    val questionSearchQuery: StateFlow<String> = _questionSearchQuery.asStateFlow()
-
-    private val _selectedDifficulty = MutableStateFlow("الكل")
-    val selectedDifficulty: StateFlow<String> = _selectedDifficulty.asStateFlow()
-
-    private val _selectedQuestionTag = MutableStateFlow("الكل")
-    val selectedQuestionTag: StateFlow<String> = _selectedQuestionTag.asStateFlow()
-
-    // Interactive Quiz State
-    private val _activeQuizQuestionIndex = MutableStateFlow(0)
-    val activeQuizQuestionIndex: StateFlow<Int> = _activeQuizQuestionIndex.asStateFlow()
-
-    private val _selectedQuizAnswers = MutableStateFlow<Map<Int, Int>>(emptyMap())
-    val selectedQuizAnswers: StateFlow<Map<Int, Int>> = _selectedQuizAnswers.asStateFlow()
-
-    private val _quizSubmitted = MutableStateFlow(false)
-    val quizSubmitted: StateFlow<Boolean> = _quizSubmitted.asStateFlow()
-
     // Translation State
     private val _translationInputText = MutableStateFlow("")
     val translationInputText: StateFlow<String> = _translationInputText.asStateFlow()
@@ -375,8 +354,6 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
 
     // Data lists getters
     fun getFaculties() = repository.getFaculties()
-    fun getWorldLibraries(): List<WorldLibrary> = repository.getWorldLibraries()
-    fun getExamResults(): List<ExamResult> = repository.getExamResults()
     fun getVocabularyCards(): List<VocabularyCard> = repository.getVocabulary()
 
     // Filtering Functions
@@ -402,18 +379,6 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
 
     fun setProjectYearFilter(year: String) {
         _projectYearFilter.value = year
-    }
-
-    fun setQuestionSearchQuery(query: String) {
-        _questionSearchQuery.value = query
-    }
-
-    fun setDifficulty(difficulty: String) {
-        _selectedDifficulty.value = difficulty
-    }
-
-    fun setQuestionTag(tag: String) {
-        _selectedQuestionTag.value = tag
     }
 
     // Books list filtered ONLY by student's current profile (Fixed Scope)
@@ -504,37 +469,6 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
 
             matchFaculty && matchLevel && matchYear && matchSearch
         }
-    }
-
-    // Questions filtered for Exam Platform
-    fun getFilteredQuestions(): List<Question> {
-        return repository.getQuestions().filter { q ->
-            val matchFaculty = (_selectedFaculty.value == "الكل" || q.faculty == _selectedFaculty.value)
-            val matchDifficulty = (_selectedDifficulty.value == "الكل" || q.difficulty == _selectedDifficulty.value)
-            val matchTag = (_selectedQuestionTag.value == "الكل" || q.tags.contains(_selectedQuestionTag.value))
-            val matchSearch = _questionSearchQuery.value.isEmpty() ||
-                    q.questionText.contains(_questionSearchQuery.value, ignoreCase = true) ||
-                    q.subject.contains(_questionSearchQuery.value, ignoreCase = true)
-
-            matchFaculty && matchDifficulty && matchTag && matchSearch
-        }
-    }
-
-    // Quiz Actions
-    fun answerQuizQuestion(questionIndex: Int, optionIndex: Int) {
-        val currentMap = _selectedQuizAnswers.value.toMutableMap()
-        currentMap[questionIndex] = optionIndex
-        _selectedQuizAnswers.value = currentMap
-    }
-
-    fun submitQuiz() {
-        _quizSubmitted.value = true
-    }
-
-    fun resetQuiz() {
-        _activeQuizQuestionIndex.value = 0
-        _selectedQuizAnswers.value = emptyMap()
-        _quizSubmitted.value = false
     }
 
     // Favorites Action
@@ -685,8 +619,6 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                 "يمكنك تسديد الرسوم الدراسية أو رسوم السكن والساعات من خلال قسم 'محفظتي والخدمات المالية'. تتوفر طرق دفع سريعة عبر الكريمي، البطاقات المصرفية والمحافظ الرقمية اليمنيّة."
             query.contains("كتاب", ignoreCase = true) || query.contains("مرجع", ignoreCase = true) || query.contains("ترم", ignoreCase = true) ->
                 "أهلاً بك! يمكنك الوصول لجميع المراجع والكتب المقررة لمستواك الدراسي من خلال قسم 'المكتبة الرقمية' في القائمة الجانبية. هل تبحث عن كتاب محدد؟"
-            query.contains("اختبار", ignoreCase = true) || query.contains("امتحان", ignoreCase = true) ->
-                "ستجد نماذج الاختبارات السابقة والتمارين في قسم 'بنك الاختبارات'. نوصي بمراجعة اختبارات العام الماضي للتحضير بشكل أفضل."
             query.contains("جدول", ignoreCase = true) ->
                 "يمكنك عرض جدولك الدراسي الأسبوعي ومواعيد المحاضرات من خلال تبويب 'الجدول' في الشاشة الرئيسية."
             query.contains("معدل", ignoreCase = true) || query.contains("gpa", ignoreCase = true) ->

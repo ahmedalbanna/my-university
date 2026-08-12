@@ -9,13 +9,10 @@ import com.example.data.local.entities.SemesterEntity
 import com.example.data.local.entities.CourseEntity
 import com.example.data.local.entities.ScheduleEntity
 import com.example.data.model.Book
-import com.example.data.model.ExamResult
+import com.example.data.model.CourseInfo
 import com.example.data.model.Project
-import com.example.data.model.Question
-import com.example.data.model.QuestionVersion
 import com.example.data.model.StudentProfile
 import com.example.data.model.VocabularyCard
-import com.example.data.model.WorldLibrary
 import kotlinx.coroutines.flow.Flow
 
 class JamaatyRepository(private val appDao: AppDao) {
@@ -179,14 +176,6 @@ class JamaatyRepository(private val appDao: AppDao) {
     }
 
     fun getSemesters(): List<String> = listOf("الفصل الأول", "الفصل الثاني", "الفصل الصيفي")
-
-    data class CourseInfo(
-        val name: String,
-        val hasProjects: Boolean = false,
-        val hasResearch: Boolean = false,
-        val hasExams: Boolean = true,
-        val hasReferences: Boolean = true
-    )
 
     fun getCourseDetails(courseName: String): CourseInfo {
         return when {
@@ -428,125 +417,6 @@ class JamaatyRepository(private val appDao: AppDao) {
         )
     )
 
-    fun getQuestions(): List<Question> = listOf(
-        // Computer Science & IT
-        Question(
-            id = "q101",
-            questionText = "ما هي التعقدية الزمانية لخوارزمية البحث الثنائي (Binary Search) في مصفوفة مرتبة؟",
-            subject = "خوارزميات وتراكيب البيانات",
-            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
-            level = 2,
-            semester = 1,
-            difficulty = "متوسط",
-            options = listOf("O(n)", "O(log n)", "O(n^2)", "O(1)"),
-            correctIndex = 1,
-            explanation = "البحث الثنائي يقوم بتقسيم مصفوفة البحث إلى النصف في كل خطوة، مما يجعله ذو كفاءة لوغاريتمية.",
-            tags = listOf("#خوارزميات", "#ترم_أول", "#جامعة_صنعاء"),
-            versionHistory = listOf(
-                QuestionVersion("v1.0", "2025-09-10", "د. صادق الشراجي", "إضافة السؤال لبنك نماذج الاختبارات.")
-            )
-        ),
-        Question(
-            id = "q103",
-            questionText = "ما هي وظيفة بروتوكول DHCP في شبكات الحاسوب؟",
-            subject = "شبكات الحاسوب",
-            faculty = "كلية الحاسوب وتكنولوجيا المعلومات",
-            level = 3,
-            semester = 2,
-            difficulty = "سهل",
-            options = listOf("تشفير البيانات", "توزيع عناوين IP تلقائياً", "توجيه الرسائل البريدية", "ترجمة أسماء النطاقات"),
-            correctIndex = 1,
-            explanation = "يقوم بروتوكول DHCP بتخصيص عناوين IP وإعدادات الشبكة للأجهزة المنضمة للشبكة تلقائياً.",
-            tags = listOf("#شبكات", "#جامعة_تعز", "#IT"),
-            versionHistory = listOf(
-                QuestionVersion("v1.1", "2026-02-15", "م. وليد البعداني", "تحديث الخيارات.")
-            )
-        ),
-
-        // Engineering
-        Question(
-            id = "q102",
-            questionText = "في قانون أوم، ما هي العلاقة بين التيار والجهد عند ثبوت المقاومة؟",
-            subject = "الفيزياء الهندسية",
-            faculty = "كلية الهندسة والبترول",
-            level = 1,
-            semester = 1,
-            difficulty = "سهل",
-            options = listOf("طردية", "عكسية", "لا توجد", "لوغاريتمية"),
-            correctIndex = 0,
-            explanation = "التيار يتناسب طردياً مع الجهد الكهربائي عند ثبوت قيمة المقاومة (V = I * R).",
-            tags = listOf("#فيزياء", "#هندسة", "#قانون_أوم"),
-            versionHistory = listOf(
-                QuestionVersion("v1.0", "2025-10-01", "أ.د. الكبسي", "إدخال السؤال في بنك الأسئلة.")
-            )
-        ),
-        Question(
-            id = "q201",
-            questionText = "ما هي المادة الأساسية المستخدمة في صناعة الخرسانة المسلحة لمقاومة قوى الشد؟",
-            subject = "مواد البناء",
-            faculty = "كلية الهندسة والبترول",
-            level = 2,
-            semester = 1,
-            difficulty = "سهل",
-            options = listOf("الرمل", "الأسمنت", "حديد التسليح", "الحصى"),
-            correctIndex = 2,
-            explanation = "الخرسانة تقاوم الضغط بشكل ممتاز ولكنها ضعيفة في الشد، لذا يضاف حديد التسليح لتحمل قوى الشد.",
-            tags = listOf("#هندسة_مدنية", "#مواد_بناء", "#جامعة_عدن"),
-            versionHistory = listOf(
-                QuestionVersion("v1.0", "2024-11-20", "د. نبيل غانم", "إضافة سؤال لمقرر الخرسانة.")
-            )
-        ),
-
-        // Medicine & Health Sciences
-        Question(
-            id = "q301",
-            questionText = "ما هو العضو المسؤول عن تصفية الدم من الفضلات وإنتاج البول؟",
-            subject = "علم وظائف الأعضاء (Physiology)",
-            faculty = "كلية الطب والعلوم الصحية",
-            level = 2,
-            semester = 1,
-            difficulty = "سهل",
-            options = listOf("الكبد", "الطحال", "الكلية", "البنكرياس"),
-            correctIndex = 2,
-            explanation = "تقوم الكليتان بتصفية الدم وتنظيم توازن السوائل والأملاح في الجسم.",
-            tags = listOf("#طب", "#Physiology", "#جامعة_إب"),
-            versionHistory = listOf(
-                QuestionVersion("v1.0", "2025-12-05", "د. أمة اللطيف الحيمي", "سؤال أساسي لطلاب الطب.")
-            )
-        ),
-        Question(
-            id = "q302",
-            questionText = "أي من الفيتامينات التالية يساهم في عملية تخثر الدم؟",
-            subject = "الكيمياء الحيوية",
-            faculty = "كلية الطب والعلوم الصحية",
-            level = 1,
-            semester = 2,
-            difficulty = "متوسط",
-            options = listOf("Vitamin C", "Vitamin D", "Vitamin K", "Vitamin A"),
-            correctIndex = 2,
-            explanation = "فيتامين K ضروري لتصنيع بروتينات التخثر في الكبد.",
-            tags = listOf("#Biochemistry", "#فيتامينات", "#طب_جامعة_ذمار")
-        ),
-
-        // Commerce & Economics
-        Question(
-            id = "q401",
-            questionText = "ما هو المبدأ المحاسبي الذي ينص على تسجيل الإيرادات عند تحققها وليس عند استلام النقد؟",
-            subject = "مبادئ المحاسبة",
-            faculty = "كلية التجارة والاقتصاد",
-            level = 1,
-            semester = 1,
-            difficulty = "متوسط",
-            options = listOf("الأساس النقدي", "أساس الاستحقاق", "مبدأ التكلفة التاريخية", "مبدأ الحيطة والحذر"),
-            correctIndex = 1,
-            explanation = "أساس الاستحقاق يقضي بتسجيل العمليات المالية في الفترة التي حدثت فيها بغض النظر عن الحركة النقدية.",
-            tags = listOf("#محاسبة", "#جامعة_صنعاء", "#تجارة"),
-            versionHistory = listOf(
-                QuestionVersion("v1.0", "2025-08-15", "د. محمد العمراني", "إضافة مقرر محاسبة 1.")
-            )
-        )
-    )
-
     fun getVocabulary(): List<VocabularyCard> = listOf(
         VocabularyCard(
             id = "v1",
@@ -584,45 +454,5 @@ class JamaatyRepository(private val appDao: AppDao) {
             faculty = "كلية التجارة والاقتصاد",
             example = "Balance sheets and income statements."
         )
-    )
-
-    fun getWorldLibraries(): List<WorldLibrary> = listOf(
-        WorldLibrary(
-            id = "wl1",
-            nameAr = "المكتبة الرقمية العالمية (WDL)",
-            nameEn = "World Digital Library",
-            category = "مكتبة تاريخية",
-            url = "https://www.wdl.org",
-            description = "تتيح الوصول المجاني للمراجع التاريخية والمخطوطات النادرة من مختلف دول العالم."
-        ),
-        WorldLibrary(
-            id = "wl2",
-            nameAr = "منصة جوجل للأبحاث (Google Scholar)",
-            nameEn = "Google Scholar",
-            category = "محرك بحث أكاديمي",
-            url = "https://scholar.google.com",
-            description = "محرك بحث متخصص في المؤلفات الأكاديمية والرسائل العلمية والمقالات الموثقة."
-        ),
-        WorldLibrary(
-            id = "wl3",
-            nameAr = "أرشيف الإنترنت (Internet Archive)",
-            nameEn = "Internet Archive",
-            category = "مكتبة رقمية شاملة",
-            url = "https://archive.org",
-            description = "مكتبة ضخمة تضم ملايين الكتب المجانية، والأفلام، والبرمجيات، والموسيقى."
-        ),
-        WorldLibrary(
-            id = "wl4",
-            nameAr = "بنك المعرفة العربي (AskZad)",
-            nameEn = "AskZad",
-            category = "قاعدة بيانات عربية",
-            url = "https://www.askzad.com",
-            description = "أكبر قاعدة بيانات عربية تضم كتباً ودوريات وأبحاثاً علمية باللغة العربية."
-        )
-    )
-
-    fun getExamResults(): List<ExamResult> = listOf(
-        ExamResult("CSC301", "هندسة البرمجيات", 3, "A+", 98),
-        ExamResult("CSC302", "الذكاء الاصطناعي", 3, "A", 93)
     )
 }

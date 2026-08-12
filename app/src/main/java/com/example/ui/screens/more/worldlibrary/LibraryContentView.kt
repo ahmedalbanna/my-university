@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Book
+import com.example.data.model.CourseInfo
 import com.example.data.model.Project
 import com.example.data.repository.JamaatyRepository
 
@@ -32,7 +33,7 @@ fun LibraryContentView(
     onProjectYearChange: (String) -> Unit,
     onAddProjectClick: () -> Unit,
     selectedCourse: String,
-    getCourseDetails: (String) -> JamaatyRepository.CourseInfo
+    getCourseDetails: (String) -> CourseInfo
 ) {
     val context = LocalContext.current
     val courseInfo = if (selectedCourse.isNotEmpty()) getCourseDetails(selectedCourse) else null
@@ -46,9 +47,6 @@ fun LibraryContentView(
     
     if (courseInfo == null || courseInfo.hasReferences) {
         availableTabs.add(Triple(2, "📖 المراجع", "References"))
-    }
-    if (courseInfo == null || courseInfo.hasExams) {
-        availableTabs.add(Triple(3, "📝 النماذج", "Exams"))
     }
     if (courseInfo != null && courseInfo.hasProjects) {
         availableTabs.add(Triple(4, "💡 المشاريع", "Projects"))
@@ -94,7 +92,7 @@ fun LibraryContentView(
 
         items(
             items = when (safeActiveTab) {
-                1, 2, 3 -> courseBooks
+                1, 2 -> courseBooks
                 else -> projects
             },
             key = { item -> 
@@ -128,7 +126,7 @@ fun LibraryContentView(
 }
 
 @Composable
-private fun SelectedCourseHeader(selectedCourse: String, courseInfo: JamaatyRepository.CourseInfo?) {
+private fun SelectedCourseHeader(selectedCourse: String, courseInfo: CourseInfo?) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         shape = RoundedCornerShape(12.dp),
@@ -146,7 +144,7 @@ private fun SelectedCourseHeader(selectedCourse: String, courseInfo: JamaatyRepo
                 Text(selectedCourse, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 if (courseInfo != null) {
                     Text(
-                        text = "المحتوى المتاح: الكتب ${if(courseInfo.hasExams) "+ النماذج" else ""} ${if(courseInfo.hasProjects) "+ المشاريع" else ""}",
+                        text = "المحتوى المتاح: الكتب ${if(courseInfo.hasProjects) "+ المشاريع" else ""}",
                         fontSize = 10.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -235,7 +233,6 @@ private fun SectionTitle(tab: Int, course: String, count: Int, courseBookCount: 
         text = when(tab) {
             1 -> if (course.isNotEmpty()) "الكتب المقررة لمقرر $course ($courseBookCount):" else "الكتب والمراجع المطابقة ($count):"
             2 -> "المراجع المساعدة المتاحة:"
-            3 -> "نماذج الاختبارات والتقييمات:"
             4 -> "أبحاث التخرج والمشاريع المتاحة:"
             else -> "الأوراق البحثية والندوات:"
         },

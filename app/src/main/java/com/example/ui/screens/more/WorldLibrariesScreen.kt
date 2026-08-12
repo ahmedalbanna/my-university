@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.data.model.Book
+import com.example.data.model.CourseInfo
 import com.example.data.model.Project
 import com.example.data.repository.JamaatyRepository
 import com.example.ui.screens.more.worldlibrary.*
@@ -39,7 +40,7 @@ fun WorldLibrariesScreen(
     getMajorsForFaculty: (String) -> List<String>,
     getSemesters: () -> List<String>,
     getCourses: (faculty: String, major: String, level: Int, semester: String) -> List<String>,
-    getCourseDetails: (String) -> JamaatyRepository.CourseInfo,
+    getCourseDetails: (String) -> CourseInfo,
     onBack: () -> Unit
 ) {
     var showAddProjectDialog by remember { mutableStateOf(false) }

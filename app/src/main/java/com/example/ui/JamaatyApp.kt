@@ -39,23 +39,21 @@ import com.example.ui.components.JamaatyBottomBar
 import com.example.ui.components.JamaatyTopBar
 import com.example.ui.navigation.DeepLinkParser
 import com.example.ui.navigation.DeepLinkResult
-import com.example.ui.screens.exams.ExamsScreen
-import com.example.ui.screens.gpa.GpaCalculatorScreen
-import com.example.ui.screens.home.HomeScreen
-import com.example.ui.screens.library.LibraryScreen
-import com.example.ui.screens.more.MoreScreen
-import com.example.ui.screens.more.TranslateScreen
-import com.example.ui.screens.more.WorldLibrariesScreen
-import com.example.ui.screens.notifications.NotificationScreen
-import com.example.ui.screens.profile.StudentProfileScreen
-import com.example.ui.screens.onboarding.OnboardingScreen
-import com.example.ui.screens.onboarding.ProfileSetupScreen
-import com.example.ui.screens.onboarding.AuthScreen
 import com.example.ui.screens.courses.CoursesScreen
 import com.example.ui.screens.schedule.ScheduleScreen
 import com.example.ui.screens.favorites.FavoritesScreen
-import com.example.ui.screens.results.ResultsScreen
 import com.example.ui.screens.wallet.WalletScreen
+import com.example.ui.screens.home.HomeScreen
+import com.example.ui.screens.library.LibraryScreen
+import com.example.ui.screens.more.MoreScreen
+import com.example.ui.screens.more.WorldLibrariesScreen
+import com.example.ui.screens.more.TranslateScreen
+import com.example.ui.screens.notifications.NotificationScreen
+import com.example.ui.screens.onboarding.ProfileSetupScreen
+import com.example.ui.screens.profile.StudentProfileScreen
+import com.example.ui.screens.onboarding.OnboardingScreen
+import com.example.ui.screens.onboarding.AuthScreen
+import com.example.ui.screens.gpa.GpaCalculatorScreen
 import com.example.ui.viewmodel.JamaatyViewModel
 
 @Composable
@@ -87,13 +85,6 @@ fun JamaatyApp(
     val projectQuery by viewModel.projectSearchQuery.collectAsState()
     val projectYear by viewModel.projectYearFilter.collectAsState()
 
-    val questionQuery by viewModel.questionSearchQuery.collectAsState()
-    val difficulty by viewModel.selectedDifficulty.collectAsState()
-    val questionTag by viewModel.selectedQuestionTag.collectAsState()
-
-    val selectedQuizAnswers by viewModel.selectedQuizAnswers.collectAsState()
-    val quizSubmitted by viewModel.quizSubmitted.collectAsState()
-
     val translationInput by viewModel.translationInputText.collectAsState()
     val translationOutput by viewModel.translationOutputText.collectAsState()
     val isTranslating by viewModel.isTranslating.collectAsState()
@@ -119,12 +110,7 @@ fun JamaatyApp(
 
                     if (result.tabRoute == "library") {
                         result.searchQuery?.let { viewModel.setBookSearchQuery(it) }
-                    } else if (result.tabRoute == "exams") {
-                        result.searchQuery?.let { viewModel.setQuestionSearchQuery(it) }
                     }
-
-                    result.difficulty?.let { viewModel.setDifficulty(it) }
-                    result.tag?.let { viewModel.setQuestionTag(it) }
 
                     if (result.openChat) {
                         showAiChatSheet = true
@@ -169,16 +155,16 @@ fun JamaatyApp(
     // Build current active screen's deep link for sharing/copying
     val currentDeepLink = remember(
         currentTab, selectedLevel, selectedSemester, selectedFaculty,
-        bookQuery, questionQuery, difficulty, questionTag
+        bookQuery
     ) {
         DeepLinkParser.buildLink(
             route = currentTab.route,
             level = if (currentTab == BottomTab.Library) selectedLevel else null,
             semester = if (currentTab == BottomTab.Library) selectedSemester else null,
             faculty = if (currentTab == BottomTab.Library) selectedFaculty else null,
-            searchQuery = if (currentTab == BottomTab.Library) bookQuery else if (currentTab == BottomTab.Exams) questionQuery else null,
-            difficulty = if (currentTab == BottomTab.Exams) difficulty else null,
-            tag = if (currentTab == BottomTab.Exams) questionTag else null
+            searchQuery = if (currentTab == BottomTab.Library) bookQuery else null,
+            difficulty = null,
+            tag = null
         )
     }
 
@@ -258,7 +244,6 @@ fun JamaatyApp(
                                 },
                                 onNavigateToSchedule = { showSchedule = true },
                                 onNavigateToCourses = { showCourses = true },
-                                onOpenResults = { currentTab = BottomTab.Results },
                                 onToggleFavorite = { id, type, title, sub, fac ->
                                     viewModel.toggleFavorite(id, type, title, sub, fac)
                                 },
@@ -280,22 +265,6 @@ fun JamaatyApp(
                                 isFavorite = { id -> favorites.any { it.id == id } }
                             )
                         }
-                        BottomTab.Exams -> {
-                            ExamsScreen(
-                                questions = viewModel.getFilteredQuestions(),
-                                searchQuery = questionQuery,
-                                selectedDifficulty = difficulty,
-                                selectedTag = questionTag,
-                                selectedAnswers = selectedQuizAnswers,
-                                quizSubmitted = quizSubmitted,
-                                onSearchChange = { q -> viewModel.setQuestionSearchQuery(q) },
-                                onDifficultyChange = { d -> viewModel.setDifficulty(d) },
-                                onTagChange = { t -> viewModel.setQuestionTag(t) },
-                                onAnswerSelected = { qIdx, optIdx -> viewModel.answerQuizQuestion(qIdx, optIdx) },
-                                onSubmitQuiz = { viewModel.submitQuiz() },
-                                onResetQuiz = { viewModel.resetQuiz() }
-                            )
-                        }
                         BottomTab.Wallet -> {
                             WalletScreen(
                                 profile = profile,
@@ -313,18 +282,11 @@ fun JamaatyApp(
                                 }
                             )
                         }
-                        BottomTab.Results -> {
-                            ResultsScreen(
-                                examResults = viewModel.getExamResults(),
-                                onOpenGpaCalculator = { showGpaCalculator = true }
-                            )
-                        }
                         BottomTab.More -> {
                             MoreScreen(
                                 onNavigateToTranslate = { showTranslate = true },
                                 onOpenGpaCalculator = { showGpaCalculator = true },
                                 onOpenLibraries = { showWorldLibraries = true },
-                                onOpenResults = { currentTab = BottomTab.Results },
                                 onOpenProfile = { showProfile = true },
                                 onLogout = { viewModel.logout() }
                             )
