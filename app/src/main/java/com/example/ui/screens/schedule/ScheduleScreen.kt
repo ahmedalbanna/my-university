@@ -40,46 +40,13 @@ fun ScheduleScreen(
     val schedules by viewModel.schedules.collectAsState()
     val days = listOf("السبت", "الأحد", "الأثنين", "الثلاثاء", "الأربعاء", "الخميس")
     var selectedDay by remember { mutableStateOf("الأحد") }
-    var showAddSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
-                    Column {
-                        Text("جدول المحاضرات", fontWeight = FontWeight.Bold)
-                        Text(
-                            text = "تنظيم جدولك الأكاديمي الأسبوعي",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "رجوع")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showAddSheet = true }) {
-                        Icon(Icons.Default.PostAdd, contentDescription = "إضافة")
-                    }
-                },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { showAddSheet = true },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("إضافة محاضرة") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                    Text("جدول المحاضرات", fontWeight = FontWeight.Bold)
+                }
             )
         }
     ) { padding ->
@@ -148,27 +115,15 @@ fun ScheduleScreen(
                     }
                     items(daySchedules, key = { it.id }) { schedule ->
                         ScheduleCardItem(
-                            schedule = schedule,
-                            onDelete = { viewModel.deleteSchedule(schedule) }
+                            schedule = schedule
                         )
                     }
                     item {
-                        Spacer(modifier = Modifier.height(80.dp)) // FAB spacing
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
         }
-    }
-
-    if (showAddSheet) {
-        AddScheduleBottomSheet(
-            initialDay = selectedDay,
-            onDismiss = { showAddSheet = false },
-            onConfirm = { subject, day, start, end, room, doctor, color ->
-                viewModel.addSchedule(subject, day, start, end, room, doctor, color)
-                showAddSheet = false
-            }
-        )
     }
 }
 
@@ -207,7 +162,7 @@ private fun EmptyScheduleState(day: String) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "استمتع بوقتك أو قم بإضافة محاضرات جديدة لجدولك",
+                text = "استمتع بوقتك الدراسي في هذا اليوم",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -218,11 +173,8 @@ private fun EmptyScheduleState(day: String) {
 
 @Composable
 private fun ScheduleCardItem(
-    schedule: ScheduleEntity,
-    onDelete: () -> Unit
+    schedule: ScheduleEntity
 ) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -283,17 +235,6 @@ private fun ScheduleCardItem(
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(
-                        onClick = { showDeleteConfirm = true },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.DeleteOutline,
-                            contentDescription = "حذف",
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -313,31 +254,6 @@ private fun ScheduleCardItem(
                 }
             }
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            icon = { Icon(Icons.Default.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("حذف المحاضرة؟") },
-            text = { Text("هل أنت متأكد من حذف '${schedule.subject}' من جدولك؟") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onDelete()
-                        showDeleteConfirm = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("حذف")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("إلغاء")
-                }
-            }
-        )
     }
 }
 
@@ -362,150 +278,6 @@ private fun ScheduleInfoRow(
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Medium,
             color = color
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddScheduleBottomSheet(
-    initialDay: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, String, String, String, String, Int) -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var subject by remember { mutableStateOf("") }
-    var doctor by remember { mutableStateOf("") }
-    var room by remember { mutableStateOf("") }
-    var day by remember { mutableStateOf(initialDay) }
-    var startTime by remember { mutableStateOf("08:00") }
-    var endTime by remember { mutableStateOf("10:00") }
-    var selectedColor by remember { mutableStateOf(0xFF673AB7.toInt()) }
-
-    val days = listOf("السبت", "الأحد", "الأثنين", "الثلاثاء", "الأربعاء", "الخميس")
-    val colors = listOf(
-        0xFFF44336, 0xFFE91E63, 0xFF9C27B0, 0xFF673AB7,
-        0xFF3F51B5, 0xFF2196F3, 0xFF009688, 0xFF4CAF50,
-        0xFFFF9800, 0xFFFF5722, 0xFF795548, 0xFF607D8B
-    ).map { it.toInt() }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        dragHandle = { BottomSheetDefaults.DragHandle() },
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Text(
-                text = "إضافة محاضرة جديدة",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-
-            OutlinedTextField(
-                value = subject,
-                onValueChange = { subject = it },
-                label = { Text("اسم المادة / المساق") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                leadingIcon = { Icon(Icons.Default.Book, contentDescription = null) }
-            )
-
-            OutlinedTextField(
-                value = doctor,
-                onValueChange = { doctor = it },
-                label = { Text("اسم الدكتور / المحاضر") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
-            )
-
-            OutlinedTextField(
-                value = room,
-                onValueChange = { room = it },
-                label = { Text("القاعة أو المعمل") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                leadingIcon = { Icon(Icons.Default.MeetingRoom, contentDescription = null) }
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("اليوم", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(days) { d ->
-                        FilterChip(
-                            selected = day == d,
-                            onClick = { day = d },
-                            label = { Text(d) },
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                    }
-                }
-            }
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = startTime,
-                    onValueChange = { startTime = it },
-                    label = { Text("وقت البدء") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.Default.Schedule, contentDescription = null) }
-                )
-                OutlinedTextField(
-                    value = endTime,
-                    onValueChange = { endTime = it },
-                    label = { Text("وقت الانتهاء") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.Default.Update, contentDescription = null) }
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("لون المحاضرة المميز", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(colors) { c ->
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(c))
-                                .clickable { selectedColor = c }
-                                .border(
-                                    width = if (selectedColor == c) 3.dp else 0.dp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (selectedColor == c) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                            }
-                        }
-                    }
-                }
-            }
-
-            Button(
-                onClick = {
-                    if (subject.isNotBlank()) {
-                        onConfirm(subject, day, startTime, endTime, room, doctor, selectedColor)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("حفظ المحاضرة في الجدول", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-        }
     }
 }
 

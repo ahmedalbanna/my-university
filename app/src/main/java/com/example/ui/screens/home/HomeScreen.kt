@@ -300,20 +300,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Digital Student Card Preview
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Text(
-                text = "💳 البطاقة الجامعية الرقمية",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            DigitalStudentCard(profile = profile)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
         // Recommended Textbooks Horizontal Carousel
         Column(modifier = Modifier.padding(bottom = 16.dp)) {
             Row(

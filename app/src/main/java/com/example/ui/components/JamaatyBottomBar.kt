@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Grade
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Grade
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
@@ -43,6 +45,7 @@ sealed class BottomTab(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
+    object Schedule : BottomTab("schedule", "الجدول", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth)
     object Home : BottomTab("home", "الرئيسية", Icons.Filled.Home, Icons.Outlined.Home)
     object Library : BottomTab("library", "المكتبة", Icons.Filled.MenuBook, Icons.Outlined.MenuBook)
     object Favorites : BottomTab("favorites", "المفضلة", Icons.Filled.Bookmark, Icons.Outlined.Bookmark)
@@ -51,7 +54,7 @@ sealed class BottomTab(
 
     companion object {
         val list: List<BottomTab>
-            get() = listOf(Home, Library, Wallet, More)
+            get() = listOf(Home, Library, Schedule, Wallet, More)
     }
 }
 
