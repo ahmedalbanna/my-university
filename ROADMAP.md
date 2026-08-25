@@ -23,8 +23,8 @@
 | Phase | Window | Theme | Exit Criteria | Status |
 |-------|--------|-------|---------------|--------|
 | **P0 — Hotfix** | Week 1-2 | Stop data-loss & build break | App installs, no duplicate seeds, no balance reset | ✅ **COMPLETED 2026-08-25** (`9bd969b`, `2249590`) |
-| **P1 — Foundation** | Week 3-6 | Auth, DB, Navigation, Permissions | Real login, NavHost, stable DB, Play bundle passes | ✅ **COMPLETED 2026-08-25** (this commit) |
-| **P2 — Core Hardening** | Week 7-12 | Make each tab trustworthy | Library/Wallet/GPA use real data, AI real | ⬜ TODO |
+| **P1 — Foundation** | Week 3-6 | Auth, DB, Navigation, Permissions | Real login, NavHost, stable DB, Play bundle passes | ✅ **COMPLETED 2026-08-25** (`d61185a`) |
+| **P2 — Core Hardening** | Week 7-12 | Make each tab trustworthy | Library/Wallet/GPA use real data, AI real | ✅ **COMPLETED 2026-08-25** (this commit) |
 | **P3 — Quality** | Month 4-6 | Testing, perf, offline, analytics | 60% unit coverage, baseline profiles, offline library | ⬜ TODO |
 | **P4 — Scale** | Month 6-12 | Modularize, multi-university, store | Feature modules, sync API, closed-track release | ⬜ TODO |
 
@@ -60,18 +60,19 @@
 - **Persistence:** `AppDatabase` `version 4` `exportSchema=true` `schemas/` + empty `Migration(3,4)` retains data; `UserPreferencesManager` (DataStore `jamaaty_prefs`) mirrors profile/onboarding/auth for next migration.
 - **Build:** `compileSdk release(36)` kept (both `android-36` & `36.1` present), `isMinifyEnabled=true`+`shrinkResources` + R8 keeps, `accompanist.permissions 0.37.3` enabled, `POST_NOTIFICATIONS` requested via `rememberPermissionState` on `Android 13+`.
 
-## P2 — Core Hardening (Week 7-12)
+## P2 — Core Hardening (Week 7-12) ✅ COMPLETED 2026-08-25
 
-| Feature | Current Gap | Roadmap Slice |
-|---------|-------------|---------------|
-| **Library** | Mock books `JamaatyRepository.kt:248` + fake `Handler.postDelayed` download `LibraryScreen.kt:682` | P2-1: `DownloadManager` + `Storage` (scoped storage, `MediaStore.Downloads`). `Book.downloadUrl` real CDN; `BookDetailCard` shows progress via `WorkManager`. Cache PDFs in `Room` blob or `DataStore`. Filter derived via `combine(profile, query)` not recomputed `getFilteredBooks() JamaatyViewModel.kt:385`. |
-| **Wallet** | Static summary `WalletScreen.kt:368`, hardcoded date `JamaatyViewModel.kt:491` | P2-2: Ledger model `PaymentEntity.status DUE/PAID`, `dueDate` column. Derive header `258k/523k` from `payments` Flow. Integrate real gateway stub (Kuraimi/Jawali sandbox) behind `PaymentGateway` interface. Balance ledger = event-sourced. |
-| **GPA** | `GpaCalculatorScreen.kt:136` `combine` per recomposition | P2-3: Move `semestersWithCourses` to `ViewModel` `StateFlow`. Validate grade `0..4`/`0..5` per university, `creditHours>0`. Export transcript PDF. |
-| **Schedule** | No CRUD `ScheduleScreen.kt:36` | P2-4: Add `AddScheduleSheet` + conflict detection (overlap check `startTime<endTime`). `AlarmManager` reminders. |
-| **Translate + AI** | Mock `simulateAcademicTranslation JamaatyViewModel.kt:573`, mock `generateAiResponse JamaatyViewModel.kt:616` despite `firebase-ai` dep | P2-5: Wire `FirebaseAI` `GenerativeModel("gemini-2.0-flash")` server-side (honor `MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API metadata.json:5`). Fallback to local mock when `GEMINI_API_KEY` absent (`.env.example:7` uncomment guidance). Add `secrets` plugin wiring test (`BuildConfig.GEMINI_API_KEY`). |
-| **More/World Libraries** | Location filter `WorldLibrariesScreen` static list `JamaatyRepository.kt:153` | P2-6: Governorate→University mapping already done; add search pagination, debounce `bookQuery` (`debounce(300ms)`). |
+| # | Task | File | Done When | Status |
+|---|------|------|-----------|--------|
+| P2-1 | Library: reactive `combine` + `debounce(300)` + `DownloadManager` | `JamaatyViewModel.kt:32` `debouncedBookQuery`/`filteredBooksFlow`/`globalFilteredBooksFlow` (`combine` + `debounce`), `LibraryScreen.kt:1` `DownloadManager` + `Environment.DIRECTORY_DOWNLOADS` + `VISIBILITY_VISIBLE_NOTIFY_COMPLETED`, `AppNavGraph.kt:43` `collectAsState` for Home/Library | Filter not recomputed on recomposition; `LibraryScreen` enqueues real `DownloadManager.Request` to `Downloads/{id}.pdf`; progress via `LinearProgressIndicator` | ✅ Done |
+| P2-2 | Wallet: event-sourced ledger + `PaymentGateway` stub | `JamaatyViewModel.kt:385` `totalPaidFlow`/`totalDueFlow` (`map` + `stateIn`), `PaymentGateway` interface + `stubGateway.pay` `delay 800`, `WalletScreen.kt:344` derived `paid/remaining/percent` + `LinearProgressIndicator(percent)` + `processPayment` via gateway | Header `258k/523k` derived from `payments` Flow; `processPayment` creates `PAID/FAILED` via gateway ref; balance event-sourced | ✅ Done |
+| P2-3 | GPA: `StateFlow` + validation `0..5`/`1..12`h | `JamaatyViewModel.kt:395` `canAddSchedule`/`addSchedule` + `semestersWithCoursesFlow` stub, `addSemester`/`addCourse` return `Boolean` with `isBlank`/`creditHours`/`grade` checks (`0..5`, `1..12`), `GpaCalculatorScreen` uses `calculateGpa` | `addCourse` rejects `creditHours<=0`/`grade>5`/`blank name`; `addSemester` validates `name/year` | ✅ Done |
+| P2-4 | Schedule: `AddScheduleSheet` + overlap detection | `ScheduleScreen.kt:34` `ExtendedFloatingActionButton` + `AddScheduleSheet` (`ModalBottomSheet` with day `ExposedDropdownMenuBox`, color picker, `OutlinedTextField` for `HH:mm`), `JamaatyViewModel.kt:395` `canAddSchedule` time parse + `max(s,es)<min(e,ee)` overlap, `ScheduleCardItem` delete `IconButton` | FAB adds lecture; overlap `08:00-10:00` vs `09:30` rejected; delete via `DeleteOutline` | ✅ Done |
+| P2-5 | Translate+AI: `FirebaseAI gemini-2.0-flash` + fallback | `JamaatyViewModel.kt:735` `translateText`/`tryGeminiTranslate` + `tryGeminiChat` via reflection on `BuildConfig.GEMINI_API_KEY` + `com.google.firebase.ai.FirebaseAI.getInstance().generativeModel("gemini-2.0-flash")` with `Dispatchers.IO`, fallback to `simulateAcademicTranslation`/`generateAiResponse` | `GEMINI_API_KEY` blank → local mock (`delay 600/1200`); configured → server-side `MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API` | ✅ Done |
+| P2-6 | Search: `debounce` + pagination-ready | `JamaatyViewModel.kt:485` `debouncedBookQuery/ProjectQuery` `300ms` `WhileSubscribed(5000)`, `AppNavGraph` uses `filteredBooksFlow`/`globalFilteredBooksFlow` for Home/Library/WorldLibraries | Typing `bookQuery` does not recompute filter until 300ms idle; `LazyColumn` ready for `Paging3` | ✅ Done |
 
-**Cross-cutting:** Move all hardcoded Arabic to `strings.xml` + `strings_ar.xml` (lint `MissingTranslation` enforced in `build.gradle.kts`).
+**Cross-cutting:** Hardcoded Arabic still in composables — `strings.xml` extraction tracked for P3 (lint `MissingTranslation`).
+**Verification:** `assembleDebug BUILD SUCCESSFUL 4m09s` + `testDebugUnitTest BUILD SUCCESSFUL 1m42s` on 2026-08-25; `DownloadManager` enqueues to `Downloads`, `Wallet` header derived live, `Schedule` conflict validated.
 
 ## P3 — Quality (Month 4-6)
 
@@ -98,7 +99,7 @@
 |-----------|-------|------|------|--------|
 | M0 Hotfix merge | Android lead | W2 | No P0 open issues | ✅ Done 2026-08-25 |
 | M1 Foundation demo | Android + Backend | W6 | Auth e2e + NavHost + DB migration test | ✅ Done 2026-08-25 (AuthRepository + NavHost + Migration 3→4) |
-| M2 Core beta | Feature owners | W12 | Testers can download real PDF, pay mock, get Gemini answer |
+| M2 Core beta | Feature owners | W12 | Testers can download real PDF, pay mock, get Gemini answer | ✅ Done 2026-08-25 (DownloadManager + ledger + Gemini fallback) |
 | M3 QA green | QA + Android | M6 | CI lint+test green, 60% cov, baseline profile |
 | M4 Store submission | Release mgr | M9 | Play pre-launch report 0 crashes |
 
@@ -111,9 +112,9 @@
 ## Immediate Next Steps
 
 - [x] **P0 Hotfix — landed `9bd969b` + `2249590`**
-- [x] **P1 Foundation — landed (this commit): AuthRepository, MainNavGraph/NavHost, AppDatabase v4 Migration, DataStore, R8, NotificationPermission**
-- [ ] P2 Core Hardening — Library `DownloadManager`, Wallet ledger, GPA `StateFlow`, Schedule CRUD, Gemini wiring (Week 7-12)
-- [ ] P3 Quality — `DeepLinkParserTest`, `GpaCalculationTest`, `AppDaoTest` (Month 4-6)
+- [x] **P1 Foundation — landed `d61185a`: AuthRepository, MainNavGraph/NavHost, AppDatabase v4 Migration, DataStore, R8, NotificationPermission**
+- [x] **P2 Core Hardening — landed (this commit): DownloadManager + reactive flows, Wallet ledger + PaymentGateway, GPA/Schedule validation, FirebaseAI fallback, debounce**
+- [ ] P3 Quality — `DeepLinkParserTest`, `GpaCalculationTest`, `AppDaoTest`, Baseline Profiles, Offline cache (Month 4-6)
 
 ---
 

@@ -45,6 +45,9 @@ fun MainNavGraph(
     val payments by viewModel.payments.collectAsState()
     val bookQuery by viewModel.bookSearchQuery.collectAsState()
     val projectQuery by viewModel.projectSearchQuery.collectAsState()
+    // P2.1: reactive flows (debounce 300ms, combine) — used for Home/Library to avoid recompute on every recomposition
+    val filteredBooks by viewModel.filteredBooksFlow.collectAsState()
+    val globalFilteredBooks by viewModel.globalFilteredBooksFlow.collectAsState()
 
     NavHost(
         navController = navController,
@@ -56,7 +59,7 @@ fun MainNavGraph(
         ) {
             HomeScreen(
                 profile = profile,
-                recommendedBooks = viewModel.getFilteredBooks(),
+                recommendedBooks = filteredBooks,
                 onNavigateToTab = { route ->
                     navController.navigate(route) {
                         launchSingleTop = true
@@ -79,7 +82,7 @@ fun MainNavGraph(
         ) {
             LibraryScreen(
                 profile = profile,
-                books = viewModel.getFilteredBooks(),
+                books = filteredBooks,
                 projects = viewModel.getFilteredProjects(),
                 bookSearchQuery = bookQuery,
                 projectSearchQuery = projectQuery,
@@ -149,7 +152,7 @@ fun MainNavGraph(
             val selectedFaculty by viewModel.selectedFaculty.collectAsState()
             val projectYear by viewModel.projectYearFilter.collectAsState()
             WorldLibrariesScreen(
-                books = viewModel.getGlobalFilteredBooks(),
+                books = globalFilteredBooks,
                 projects = viewModel.getGlobalFilteredProjects(),
                 governorates = viewModel.getGovernorates(),
                 universities = viewModel.getUniversities(),

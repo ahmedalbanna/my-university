@@ -342,7 +342,11 @@ fun WalletScreen(
                     contentPadding = PaddingValues(bottom = 20.dp)
                 ) {
                     item {
-                        // Summary Card for Academic Fees Status
+                        // P2.2: Summary Card — derived from payments ledger (replaces static 265k/523k)
+                        val paid = payments.filter { it.status == "PAID" }.sumOf { it.amount }
+                        val totalExpected = 523000.0
+                        val remaining = (totalExpected - paid).coerceAtLeast(0.0)
+                        val percent = (paid / totalExpected).coerceIn(0.0, 1.0)
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
@@ -366,7 +370,7 @@ fun WalletScreen(
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = "إجمالي الرسوم المتبقية: 265,000 ر.ي",
+                                            text = "إجمالي الرسوم المتبقية: ${String.format("%,.0f", remaining)} ر.ي",
                                             fontSize = 12.sp,
                                             color = MaterialTheme.colorScheme.error,
                                             fontWeight = FontWeight.Bold
@@ -389,20 +393,20 @@ fun WalletScreen(
 
                                 Spacer(modifier = Modifier.height(10.dp))
 
-                                // Progress Indicator for Paid Fees vs Due
+                                // Progress Indicator for Paid Fees vs Due — ledger derived
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "نسبة المسدد: 49%",
+                                        text = "نسبة المسدد: ${(percent * 100).toInt()}%",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = "المسدد: 258,000 / 523,000 ر.ي",
+                                        text = "المسدد: ${String.format("%,.0f", paid)} / ${String.format("%,.0f", totalExpected)} ر.ي",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -410,7 +414,7 @@ fun WalletScreen(
                                 }
                                 Spacer(modifier = Modifier.height(6.dp))
                                 LinearProgressIndicator(
-                                    progress = { 0.49f },
+                                    progress = { percent.toFloat() },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(8.dp)
