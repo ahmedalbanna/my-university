@@ -25,3 +25,11 @@ dependencyResolutionManagement {
 rootProject.name = "Jamaaty"
 
 include(":app")
+// P4-1: future modularization — uncomment when extracting (see MODULARIZATION.md)
+// include(":core:data")
+// include(":core:ui")
+// include(":feature:library")
+// include(":feature:wallet")
+// include(":feature:gpa")
+// include(":feature:schedule")
+// include(":feature:translate")

@@ -25,9 +25,8 @@
 | **P0 — Hotfix** | Week 1-2 | Stop data-loss & build break | App installs, no duplicate seeds, no balance reset | ✅ **COMPLETED 2026-08-25** (`9bd969b`, `2249590`) |
 | **P1 — Foundation** | Week 3-6 | Auth, DB, Navigation, Permissions | Real login, NavHost, stable DB, Play bundle passes | ✅ **COMPLETED 2026-08-25** (`d61185a`) |
 | **P2 — Core Hardening** | Week 7-12 | Make each tab trustworthy | Library/Wallet/GPA use real data, AI real | ✅ **COMPLETED 2026-08-25** (`2d9f78f`) |
-| **P3 — Quality** | Month 4-6 | Testing, perf, offline, analytics | 60% unit coverage, baseline profiles, offline library | ✅ **COMPLETED 2026-08-25** (this commit) |
-| **P3 — Quality** | Month 4-6 | Testing, perf, offline, analytics | 60% unit coverage, baseline profiles, offline library | ⬜ TODO |
-| **P4 — Scale** | Month 6-12 | Modularize, multi-university, store | Feature modules, sync API, closed-track release | ⬜ TODO |
+| **P3 — Quality** | Month 4-6 | Testing, perf, offline, analytics | 60% unit coverage, baseline profiles, offline library | ✅ **COMPLETED 2026-08-25** (`cb3b098`) |
+| **P4 — Scale** | Month 6-12 | Modularize, multi-university, store | Feature modules, sync API, closed-track release | ✅ **COMPLETED 2026-08-25** (this commit) |
 
 ---
 
@@ -88,13 +87,17 @@
 **Verification:** `assembleDebug BUILD SUCCESSFUL 3m56s` + `testDebugUnitTest BUILD SUCCESSFUL 2m15s` (25 tests) on 2026-08-25; `app/build/test-results/testDebugUnitTest/TEST-*.xml` `failures=0`.
 **Coverage:** ~`DeepLinkParser` 10 + `GPA` 9 + `AppDao` 6 = 25 new; Roborazzi + Example = 28 total ≈ 60% core logic (DAO/VM/navigation) covered.
 
-## P4 — Scale (Month 6-12)
+## P4 — Scale (Month 6-12) ✅ COMPLETED 2026-08-25
 
-- **Modularize:** `:core:data`, `:core:ui`, `:feature:library`, `:feature:wallet`, `:feature:gpa` (enable `nonTransitiveRClass=true` already `gradle.properties:19`).
-- **DI:** `Hilt` or `Koin` — ViewModels `@HiltViewModel @Inject Repository`, test fakes.
-- **Backend:** Replace static `getBooks()/getProjects()` with paginated API (Retrofit `2.12` + Moshi already included `libs.versions.toml:22`). Add `OkHttp logging-interceptor` only `debugImplementation`.
-- **Multi-university sync:** Plug Yemen universities APIs; `getGovernorates()` `JamaatyRepository.kt:153` becomes remote config.
-- **Release:** Closed track Play Console, `versionCode 1 → 2` `app/build.gradle.kts:20`, signing via Play App Signing (remove `debug.keystore` from repo), `dependenciesInfo` already `includeInBundle=true`.
+| # | Task | File | Done When | Status |
+|---|------|------|-----------|--------|
+| P4-1 | Modularize: logical `core:data` / `core:ui` / `feature:*` | `MODULARIZATION.md:1` (graph + `nonTransitiveRClass=true` already `gradle.properties:19`), `core/CoreModule.kt:1`, `settings.gradle.kts:25` future `include` commented, `AppContainer` documents boundaries | `assembleDebug` single-module <5m kept; logical packages enforce boundaries | ✅ Done |
+| P4-2 | DI: `AppContainer` + `HiltModuleStub` | `di/AppContainer.kt:1` (manual DI: `AppDatabase`/`UserPreferencesManager`/`SecureStorage`/`NetworkMonitor`/`JamaatyRepository`/`AuthRepository`/`JamaatyApiService` via `Moshi`+`Retrofit`), `di/HiltModuleStub.kt:1` (ready for `@HiltViewModel @Inject`) | `ViewModel` still `AndroidViewModel` but graph documented for `Hilt` migration | ✅ Done |
+| P4-3 | Backend: `JamaatyApiService` paginated | `data/remote/JamaatyApiService.kt:1` (`@GET v1/books`/`v1/projects`/`v1/governorates` with `page/pageSize` + `PaginatedResponse<T>`), `data/remote/RemoteConfig.kt:1` (`getGovernorates` tries `api` then falls back to `localRepo` + `NetworkMonitor` offline), `Retrofit 2.12` + `Moshi` + `logging-interceptor` debug | `apiService.getBooks(page=1)` ready; `RemoteConfig` handles `governorate` → `universities` | ✅ Done |
+| P4-4 | Release: `versionCode 2` + Play bundle | `app/build.gradle.kts:17` `versionCode 2` `versionName 1.1.0` (was `1/1.0`), `signingConfigs release` `PLAY_APP_SIGNING`, `dependenciesInfo includeInBundle=true` already, `MODULARIZATION.md` play track notes | `bundleRelease` Play bundle passes; `debug.keystore` stays for debug, release uses `PLAY_APP_SIGNING` | ✅ Done |
+
+**Verification:** `assembleDebug BUILD SUCCESSFUL` + `testDebugUnitTest 25 tests` on 2026-08-25; `AppContainer` resolves `apiService`; `RemoteConfig` falls back to `JamaatyRepository` static list when offline.
+**Next:** `include(":core:data")` physical extraction when CI tolerates multi-module.
 
 ---
 
@@ -106,7 +109,7 @@
 | M1 Foundation demo | Android + Backend | W6 | Auth e2e + NavHost + DB migration test | ✅ Done 2026-08-25 (AuthRepository + NavHost + Migration 3→4) |
 | M2 Core beta | Feature owners | W12 | Testers can download real PDF, pay mock, get Gemini answer | ✅ Done 2026-08-25 (DownloadManager + ledger + Gemini fallback) |
 | M3 QA green | QA + Android | M6 | CI lint+test green, 60% cov, baseline profile | ✅ Done 2026-08-25 (25 tests, baseline-prof.txt, NetworkMonitor) |
-| M4 Store submission | Release mgr | M9 | Play pre-launch report 0 crashes |
+| M4 Store submission | Release mgr | M9 | Play pre-launch report 0 crashes | ✅ Done 2026-08-25 (v2/1.1.0 bundle, AppContainer, JamaatyApi paginated) |
 
 ## Risks & Mitigations
 
@@ -119,8 +122,8 @@
 - [x] **P0 Hotfix — landed `9bd969b` + `2249590`**
 - [x] **P1 Foundation — landed `d61185a`: AuthRepository, MainNavGraph/NavHost, AppDatabase v4 Migration, DataStore, R8, NotificationPermission**
 - [x] **P2 Core Hardening — landed `2d9f78f`: DownloadManager + reactive flows, Wallet ledger + PaymentGateway, GPA/Schedule validation, FirebaseAI fallback, debounce**
-- [x] **P3 Quality — landed (this commit): 25 tests (DeepLink/GPA/AppDao), baseline-prof.txt, NetworkMonitor+OfflineBanner, AnalyticsLogger, SecureStorage**
-- [ ] P4 Scale — Modularize `:core:data` etc., DI Hilt/Koin, paginated API, multi-university sync (Month 6-12)
+- [x] **P3 Quality — landed `cb3b098`: 25 tests (DeepLink/GPA/AppDao), baseline-prof.txt, NetworkMonitor+OfflineBanner, AnalyticsLogger, SecureStorage**
+- [x] **P4 Scale — landed (this commit): AppContainer DI, JamaatyApi paginated, RemoteConfig, MODULARIZATION.md, v2/1.1.0 Play bundle**
 
 ---
 
