@@ -19,3 +19,14 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# P1.4: R8 keep rules — Room, Moshi, Firebase (required when isMinifyEnabled=true)
+-keep class androidx.room.** { *; }
+-keep class com.example.data.local.** { *; }
+-keep class com.example.data.model.** { *; }
+-keep class com.squareup.moshi.** { *; }
+-keep @com.squareup.moshi.JsonClass class * { *; }
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+-keepattributes Signature, InnerClasses, EnclosingMethod
+-keepattributes *Annotation*

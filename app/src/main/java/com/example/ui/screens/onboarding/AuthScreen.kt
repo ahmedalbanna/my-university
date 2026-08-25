@@ -30,13 +30,40 @@ import com.example.R
 @Composable
 fun AuthScreen(
     onLoginSuccess: (String, String) -> Unit,
-    onSignUpSuccess: (String, String) -> Unit
+    onSignUpSuccess: (String, String) -> Unit,
+    onSignUpWithConfirm: (String, String, String) -> Unit = { e, p, c -> onSignUpSuccess(e, p) },
+    authError: String? = null,
+    isLoading: Boolean = false,
+    onClearError: () -> Unit = {}
 ) {
     var isLoginMode by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmError by remember { mutableStateOf<String?>(null) }
+
+    fun validateAndSubmit() {
+        emailError = null; passwordError = null; confirmError = null
+        var hasError = false
+        if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailError = "البريد الإلكتروني غير صالح"
+            hasError = true
+        }
+        if (password.length < 6) {
+            passwordError = "كلمة المرور 6 أحرف على الأقل"
+            hasError = true
+        }
+        if (!isLoginMode && password != confirmPassword) {
+            confirmError = "كلمتا المرور غير متطابقتين"
+            hasError = true
+        }
+        if (hasError) return
+        if (isLoginMode) onLoginSuccess(email.trim(), password)
+        else onSignUpWithConfirm(email.trim(), password, confirmPassword)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Aesthetic Background (Optional gradient or image)
@@ -84,24 +111,43 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // P1.1 validation + error UI
+            if (authError != null) {
+                LaunchedEffect(authError) { kotlinx.coroutines.delay(4000); onClearError() }
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = authError,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             // Form
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { email = it; if (emailError != null) emailError = null; if (authError != null) onClearError() },
                 label = { Text("البريد الإلكتروني الجامعي") },
                 placeholder = { Text("example@univ.edu.ye") },
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true
+                singleLine = true,
+                isError = emailError != null,
+                supportingText = emailError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { password = it; if (passwordError != null) passwordError = null; if (authError != null) onClearError() },
                 label = { Text("كلمة المرور") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 trailingIcon = {
@@ -116,21 +162,25 @@ fun AuthScreen(
                 shape = RoundedCornerShape(16.dp),
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true
+                singleLine = true,
+                isError = passwordError != null,
+                supportingText = passwordError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
             )
 
             if (!isLoginMode) {
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
+                    onValueChange = { confirmPassword = it; if (confirmError != null) confirmError = null },
                     label = { Text("تأكيد كلمة المرور") },
                     leadingIcon = { Icon(Icons.Default.LockClock, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    singleLine = true
+                    singleLine = true,
+                    isError = confirmError != null,
+                    supportingText = confirmError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } }
                 )
             }
 
@@ -146,14 +196,16 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { 
-                    if (isLoginMode) onLoginSuccess(email, password)
-                    else onSignUpSuccess(email, password)
-                },
+                onClick = { validateAndSubmit() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
+                enabled = !isLoading,
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
                     if (isLoginMode) "دخول" else "إنشاء الحساب",
                     fontWeight = FontWeight.Bold,

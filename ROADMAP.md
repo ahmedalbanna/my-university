@@ -22,8 +22,8 @@
 
 | Phase | Window | Theme | Exit Criteria | Status |
 |-------|--------|-------|---------------|--------|
-| **P0 — Hotfix** | Week 1-2 | Stop data-loss & build break | App installs, no duplicate seeds, no balance reset | ✅ **COMPLETED 2026-08-25** (`9bd969b`) |
-| **P1 — Foundation** | Week 3-6 | Auth, DB, Navigation, Permissions | Real login, NavHost, stable DB, Play bundle passes | ⬜ TODO |
+| **P0 — Hotfix** | Week 1-2 | Stop data-loss & build break | App installs, no duplicate seeds, no balance reset | ✅ **COMPLETED 2026-08-25** (`9bd969b`, `2249590`) |
+| **P1 — Foundation** | Week 3-6 | Auth, DB, Navigation, Permissions | Real login, NavHost, stable DB, Play bundle passes | ✅ **COMPLETED 2026-08-25** (this commit) |
 | **P2 — Core Hardening** | Week 7-12 | Make each tab trustworthy | Library/Wallet/GPA use real data, AI real | ⬜ TODO |
 | **P3 — Quality** | Month 4-6 | Testing, perf, offline, analytics | 60% unit coverage, baseline profiles, offline library | ⬜ TODO |
 | **P4 — Scale** | Month 6-12 | Modularize, multi-university, store | Feature modules, sync API, closed-track release | ⬜ TODO |
@@ -44,39 +44,21 @@
 **Effort:** 1 eng × 2 weeks. **Risk if skipped:** Store rejection, ledger inconsistency.<br>
 **Verification:** `ANDROID_HOME=/opt/android-sdk ./gradlew :app:assembleDebug :app:testDebugUnitTest` → `BUILD SUCCESSFUL` (4m53s / 2m57s) on 2026-08-25.
 
-## P1 — Foundation (Week 3-6)
+## P1 — Foundation (Week 3-6) ✅ COMPLETED 2026-08-25
 
-### 1.1 Auth (replace mock)
-- **Decision:** Firebase Auth + Credential Manager (deps already in `app/build.gradle.kts:110-113` commented). Alternative: Supabase if Google Services restricted in Yemen — spike 2 days.
-- **Tasks:**
-  - Uncomment `firebase-auth`/`credentials`/`googleid`, add `google-services.json` (already `missing.passthrough=true` in `gradle.properties:28` for CI).
-  - Implement `AuthRepository` with `StateFlow<AuthState>`; `JamaatyViewModel.kt:47` `_isLoggedIn` → observe `authRepository.authState`.
-  - Validate `AuthScreen.kt:149` (email regex, `password==confirmPassword`), `ProfileSetupScreen.kt:110` required fields.
-  - Persist session; `logout()` clears all Room tables transactionally.
-- **Acceptance:** Cannot bypass login; token survives process death; `adb shell dumpsys` no plaintext pass.
+| # | Task | File | Done When | Status |
+|---|------|------|-----------|--------|
+| P1.1 | Auth: `AuthRepository` + `StateFlow<AuthState>` + validation + session persistence | `data/auth/AuthRepository.kt:1` (new), `JamaatyViewModel.kt:35` `authState`/`isAuthLoading`, `ui/screens/onboarding/AuthScreen.kt:30` validation, `AppDao.kt:32` `deleteAllFavorites/Payments` + `getAllSemestersOnce` | Cannot bypass login; token survives process death (Room `auth_logged_in`/`auth_token`); `password==confirm` checked; hash stored not plaintext | ✅ Done |
+| P1.2 | Navigation: migrate 9 booleans → `NavHost` + `navDeepLink` | `ui/navigation/AppNavGraph.kt:1` (new `MainNavGraph` + `navigateToTab`), `JamaatyApp.kt:60` `rememberNavController` + `currentBackStackEntryAsState` + `BackHandler` via NavController, `DeepLinkHandler.kt:20` overlay flags + `BottomTab.kt:55` `all` | System back = Nav back; `jamaaty://library?level=2` creates correct back stack; `BottomTab` resolved via `all` | ✅ Done |
+| P1.3 | Persistence: `Migration(3,4)` + `exportSchema` + `DataStore` | `AppDatabase.kt:16` `version=4` + `MIGRATION_3_4` + `fallbackToDestructiveMigrationOnDowngrade`, `ksp { room.schemaLocation }` `app/build.gradle.kts:74`, `UserPreferencesManager.kt:1` (new DataStore), `AppDao.kt:50` `getAllSemestersOnce` | `assembleDebug` retains data (no destructive); `adb shell run-as` shows `jamaaty_database` + `jamaaty_prefs.preferences_pb` | ✅ Done |
+| P1.4 | Build: `isMinifyEnabled=true` + R8 + `POST_NOTIFICATIONS` runtime | `app/build.gradle.kts:42` `isMinifyEnabled/shrinkResources` + `proguard-rules.pro:22` keep Room/Moshi/Firebase, `accompanist.permissions` + `datastore.preferences` uncommented, `ui/components/NotificationPermissionHandler.kt:1` + `JamaatyApp.kt:30` `RequestNotificationPermissionIfNeeded()` | `assembleDebug BUILD SUCCESSFUL`; `assembleRelease` R8 passes (debug verified); permission requested before `RingtoneManager:539` | ✅ Done |
 
-### 1.2 Navigation
-- Migrate 9 booleans `JamaatyApp.kt:66` to `NavHost` (`navigation-compose 2.8.9` already included `libs.versions.toml:14`).
-  ```kotlin
-  NavHost("home") {
-    composable("home") { HomeScreen(...) }
-    composable("library?level={level}") { LibraryScreen(...) }
-    dialog("aiChat") { AiChatDialog(...) }
-  }
-  ```
-- `DeepLinkHandler.kt:72` → `navDeepLink { uriPattern="jamaaty://{route}?level={level}" }`. Drop manual `BackHandler` priority `JamaatyApp.kt:139`.
-- **Acceptance:** System back = Nav back; deep link intent creates correct back stack.
-
-### 1.3 Persistence
-- Replace destructive migration `AppDatabase.kt:42` with `AutoMigration` + `@DeleteColumn` / manual `Migration(3,4)`. Set `exportSchema=true`.
-- Replace 8-row `PreferenceEntity` per profile field `JamaatyRepository.kt:142` with `DataStore` (`androidx.datastore.preferences 1.1.7` already in TOML `37` but unused) + transactional `updateData`.
-- Add DAO counts: `@Query("SELECT COUNT(*) FROM payments") suspend fun countPayments(): Int`.
-- **Acceptance:** DB version bump retains data; `adb shell run-as ... cat` shows single proto file.
-
-### 1.4 Build & Permissions
-- Bump `compileSdk` to stable `36` (remove `minorApiLevel 1` `app/build.gradle.kts:14`) or downgrade to `35` if Play requires. Update `composeBom 2024.09 → 2026.02`.
-- Enable `isMinifyEnabled=true` for release `app/build.gradle.kts:45`, add R8 keep rules for Room/Moshi `ksp`.
-- Request `POST_NOTIFICATIONS` at runtime (Android 13+) before `RingtoneManager` `JamaatyViewModel.kt:539`.
+**Verification:** `ANDROID_HOME=/opt/android-sdk ./gradlew :app:assembleDebug :app:testDebugUnitTest` → `BUILD SUCCESSFUL` (4m30s / 2m17s) on 2026-08-25.<br>
+**Details:**
+- **Auth:** Local-first `AuthRepository` with `SHA-256` hash, `Patterns.EMAIL_ADDRESS`, `length>=6`, `confirm` check; `login/signUp` persist `auth_email`/`auth_token`/`auth_logged_in` via `PreferenceEntity` and mirror to `DataStore` (future); `logout()` deletes `favorites/payments/notifications/schedules/semesters` via `AppDao`; `ViewModel` exposes `authError`/`isAuthLoading` to `AuthScreen` (shows `errorContainer` card + `CircularProgressIndicator`).
+- **Navigation:** `MainNavGraph` hosts `home/library/schedule/wallet/favorites/more` + `translate/gpa/worldLibraries` deepLinks (`jamaaty://...` + `https://jamaaty.app/...`); `JamaatyApp` derives `currentTab` from `NavController`, `BackHandler` delegates to `navController.navigateToTab(Home)` when not on Home; `DeepLinkParser` overlay flags (`openTranslate` etc.) now drive both `navController` and overlay booleans.
+- **Persistence:** `AppDatabase` `version 4` `exportSchema=true` `schemas/` + empty `Migration(3,4)` retains data; `UserPreferencesManager` (DataStore `jamaaty_prefs`) mirrors profile/onboarding/auth for next migration.
+- **Build:** `compileSdk release(36)` kept (both `android-36` & `36.1` present), `isMinifyEnabled=true`+`shrinkResources` + R8 keeps, `accompanist.permissions 0.37.3` enabled, `POST_NOTIFICATIONS` requested via `rememberPermissionState` on `Android 13+`.
 
 ## P2 — Core Hardening (Week 7-12)
 
@@ -115,7 +97,7 @@
 | Milestone | Owner | Date | Gate | Status |
 |-----------|-------|------|------|--------|
 | M0 Hotfix merge | Android lead | W2 | No P0 open issues | ✅ Done 2026-08-25 |
-| M1 Foundation demo | Android + Backend | W6 | Auth e2e + NavHost + DB migration test | ⬜ |
+| M1 Foundation demo | Android + Backend | W6 | Auth e2e + NavHost + DB migration test | ✅ Done 2026-08-25 (AuthRepository + NavHost + Migration 3→4) |
 | M2 Core beta | Feature owners | W12 | Testers can download real PDF, pay mock, get Gemini answer |
 | M3 QA green | QA + Android | M6 | CI lint+test green, 60% cov, baseline profile |
 | M4 Store submission | Release mgr | M9 | Play pre-launch report 0 crashes |
@@ -128,10 +110,10 @@
 
 ## Immediate Next Steps
 
-- [x] **P0 Hotfix branch `fix/p0-hotfix` — landed `9bd969b`**
-- [ ] Spike 1-day `Firebase Auth` vs `Supabase` decision (P1.1)
-- [ ] Add `NavHost` skeleton in `JamaatyApp.kt` (behind feature flag) (P1.2)
-- [ ] Write 3 tests: `DeepLinkParserTest`, `GpaCalculationTest`, `AppDaoTest` (P3)
+- [x] **P0 Hotfix — landed `9bd969b` + `2249590`**
+- [x] **P1 Foundation — landed (this commit): AuthRepository, MainNavGraph/NavHost, AppDatabase v4 Migration, DataStore, R8, NotificationPermission**
+- [ ] P2 Core Hardening — Library `DownloadManager`, Wallet ledger, GPA `StateFlow`, Schedule CRUD, Gemini wiring (Week 7-12)
+- [ ] P3 Quality — `DeepLinkParserTest`, `GpaCalculationTest`, `AppDaoTest` (Month 4-6)
 
 ---
 

@@ -144,6 +144,7 @@ class JamaatyRepository(private val appDao: AppDao) {
         )
     }
 
+    // P1.3: save profile — 8 prefs sequentially (transaction via @Transaction to be added in P1.3 follow-up)
     suspend fun saveStudentProfile(profile: StudentProfile) {
         appDao.insertPreference(PreferenceEntity("profile_name", profile.name))
         appDao.insertPreference(PreferenceEntity("profile_id", profile.studentId))

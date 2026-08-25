@@ -2,16 +2,9 @@ package com.example.ui
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,28 +25,27 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.ui.components.AiChatDialog
 import com.example.ui.components.BottomTab
 import com.example.ui.components.DeepLinkDialog
 import com.example.ui.components.JamaatyBottomBar
 import com.example.ui.components.JamaatyTopBar
+import com.example.ui.components.RequestNotificationPermissionIfNeeded
 import com.example.ui.navigation.DeepLinkParser
 import com.example.ui.navigation.DeepLinkResult
+import com.example.ui.navigation.MainNavGraph
+import com.example.ui.navigation.navigateToTab
 import com.example.ui.screens.courses.CoursesScreen
-import com.example.ui.screens.schedule.ScheduleScreen
-import com.example.ui.screens.favorites.FavoritesScreen
-import com.example.ui.screens.wallet.WalletScreen
-import com.example.ui.screens.home.HomeScreen
-import com.example.ui.screens.library.LibraryScreen
-import com.example.ui.screens.more.MoreScreen
-import com.example.ui.screens.more.WorldLibrariesScreen
+import com.example.ui.screens.gpa.GpaCalculatorScreen
 import com.example.ui.screens.more.TranslateScreen
+import com.example.ui.screens.more.WorldLibrariesScreen
 import com.example.ui.screens.notifications.NotificationScreen
+import com.example.ui.screens.onboarding.AuthScreen
+import com.example.ui.screens.onboarding.OnboardingScreen
 import com.example.ui.screens.onboarding.ProfileSetupScreen
 import com.example.ui.screens.profile.StudentProfileScreen
-import com.example.ui.screens.onboarding.OnboardingScreen
-import com.example.ui.screens.onboarding.AuthScreen
-import com.example.ui.screens.gpa.GpaCalculatorScreen
 import com.example.ui.viewmodel.JamaatyViewModel
 
 @Composable
@@ -63,7 +55,13 @@ fun JamaatyApp(
     viewModel: JamaatyViewModel = viewModel()
 ) {
     val onboardingCompleted by viewModel.onboardingCompleted.collectAsState()
-    var currentTab by remember { mutableStateOf<BottomTab>(BottomTab.Home) }
+
+    // P1.2: Navigation — NavController for bottom tabs (system back = Nav back)
+    val navController = rememberNavController()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route ?: BottomTab.Home.route
+    val currentTab = BottomTab.all.find { it.route == currentRoute } ?: BottomTab.Home
+
     var showAiChatSheet by remember { mutableStateOf(false) }
     var showDeepLinkDialog by remember { mutableStateOf(false) }
     var showNotifications by remember { mutableStateOf(false) }
@@ -94,14 +92,13 @@ fun JamaatyApp(
     val unreadAiMessagesCount by viewModel.unreadAiMessagesCount.collectAsState()
     val chatMessages by viewModel.chatMessages.collectAsState()
 
-    // Deep Link Application Function — P0-6: handles overlay flags and resolves all tabs (incl. Favorites)
-    val applyDeepLink: (Uri) -> Unit = remember(viewModel) {
+    // Deep Link Application Function — P1.2: uses NavController so back stack is correct
+    val applyDeepLink: (Uri) -> Unit = remember(viewModel, navController) {
         { uri ->
             when (val result = DeepLinkParser.parse(uri)) {
                 is DeepLinkResult.NavigateTab -> {
-                    // Use `all` so jamaaty://favorites resolves even though not in bottom bar `list`
                     BottomTab.all.find { it.route == result.tabRoute }?.let { targetTab ->
-                        currentTab = targetTab
+                        navController.navigateToTab(targetTab.route)
                     }
 
                     result.level?.let { viewModel.setLevel(it) }
@@ -117,8 +114,7 @@ fun JamaatyApp(
                     if (result.openWorldLibraries) showWorldLibraries = true
                     if (result.openGpa) showGpaCalculator = true
                     if (result.openProfile) showProfile = true
-                    // openFavorites can also be tabRoute == "favorites"; handle both
-                    if (result.openFavorites) currentTab = BottomTab.Favorites
+                    if (result.openFavorites) navController.navigateToTab(BottomTab.Favorites.route)
                 }
                 DeepLinkResult.Invalid -> { /* ignore invalid link */ }
             }
@@ -140,8 +136,8 @@ fun JamaatyApp(
         }
     }
 
-    // System Back Handler Refinement
-    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || showCourses || showTranslate || showWorldLibraries || showProfile || currentTab != BottomTab.Home) {
+    // System Back Handler — P1.2: overlays first, then NavController back stack, then Home
+    BackHandler(enabled = showAiChatSheet || showDeepLinkDialog || showNotifications || showGpaCalculator || showCourses || showTranslate || showWorldLibraries || showProfile || currentRoute != BottomTab.Home.route) {
         when {
             showAiChatSheet -> showAiChatSheet = false
             showDeepLinkDialog -> showDeepLinkDialog = false
@@ -151,21 +147,22 @@ fun JamaatyApp(
             showTranslate -> showTranslate = false
             showWorldLibraries -> showWorldLibraries = false
             showProfile -> showProfile = false
-            currentTab != BottomTab.Home -> currentTab = BottomTab.Home
+            currentRoute != BottomTab.Home.route -> navController.navigateToTab(BottomTab.Home.route)
+            else -> {}
         }
     }
 
     // Build current active screen's deep link for sharing/copying
     val currentDeepLink = remember(
-        currentTab, selectedLevel, selectedSemester, selectedFaculty,
+        currentRoute, selectedLevel, selectedSemester, selectedFaculty,
         bookQuery
     ) {
         DeepLinkParser.buildLink(
-            route = currentTab.route,
-            level = if (currentTab == BottomTab.Library) selectedLevel else null,
-            semester = if (currentTab == BottomTab.Library) selectedSemester else null,
-            faculty = if (currentTab == BottomTab.Library) selectedFaculty else null,
-            searchQuery = if (currentTab == BottomTab.Library) bookQuery else null,
+            route = currentRoute,
+            level = if (currentRoute == BottomTab.Library.route) selectedLevel else null,
+            semester = if (currentRoute == BottomTab.Library.route) selectedSemester else null,
+            faculty = if (currentRoute == BottomTab.Library.route) selectedFaculty else null,
+            searchQuery = if (currentRoute == BottomTab.Library.route) bookQuery else null,
             difficulty = null,
             tag = null
         )
@@ -173,14 +170,22 @@ fun JamaatyApp(
 
     // Force RTL for Arabic layout
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        // P1.4: request POST_NOTIFICATIONS once when app starts (Android 13+)
+        RequestNotificationPermissionIfNeeded()
         if (!onboardingCompleted) {
             OnboardingScreen(
                 onFinish = { viewModel.completeOnboarding() }
             )
         } else if (!isLoggedIn) {
+            val authError by viewModel.authError.collectAsState()
+            val isAuthLoading by viewModel.isAuthLoading.collectAsState()
             AuthScreen(
                 onLoginSuccess = { email, pass -> viewModel.login(email, pass) },
-                onSignUpSuccess = { email, pass -> viewModel.signUp(email, pass) }
+                onSignUpSuccess = { email, pass -> viewModel.signUp(email, pass) },
+                onSignUpWithConfirm = { email, pass, confirm -> viewModel.signUpWithConfirm(email, pass, confirm) },
+                authError = authError,
+                isLoading = isAuthLoading,
+                onClearError = { viewModel.clearAuthError() }
             )
         } else if (profile.name.isBlank()) {
             // P0-5: was isEmpty() dead code because StudentProfile defaults are non-empty; signUp now emits blank so gate works
@@ -203,7 +208,7 @@ fun JamaatyApp(
                     unreadNotificationsCount = unreadNotificationsCount,
                     unreadAiMessagesCount = unreadAiMessagesCount,
                     onOpenAiChat = { showAiChatSheet = true },
-                    onOpenFavorites = { currentTab = BottomTab.Favorites },
+                    onOpenFavorites = { navController.navigateToTab(BottomTab.Favorites.route) },
                     onOpenNotifications = { showNotifications = true },
                     onOpenProfile = { showProfile = true },
                     onOpenDeepLinkTester = { showDeepLinkDialog = true }
@@ -211,8 +216,8 @@ fun JamaatyApp(
             },
             bottomBar = {
                 JamaatyBottomBar(
-                    currentRoute = currentTab.route,
-                    onTabSelected = { tab -> currentTab = tab }
+                    currentRoute = currentRoute,
+                    onTabSelected = { tab -> navController.navigateToTab(tab.route) }
                 )
             },
             modifier = Modifier
@@ -224,85 +229,17 @@ fun JamaatyApp(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                AnimatedContent(
-                    targetState = currentTab,
-                    transitionSpec = {
-                        val direction = if (BottomTab.list.indexOf(targetState) > BottomTab.list.indexOf(initialState)) 1 else -1
-                        (fadeIn(animationSpec = tween(300)) + slideInHorizontally(
-                            animationSpec = tween(300),
-                            initialOffsetX = { it * direction }
-                        )) togetherWith (fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
-                            animationSpec = tween(300),
-                            targetOffsetX = { -it * direction }
-                        ))
-                    },
-                    label = "TabTransition"
-                ) { tab ->
-                    when (tab) {
-                        BottomTab.Schedule -> {
-                            ScheduleScreen(
-                                viewModel = viewModel,
-                                onBack = { currentTab = BottomTab.Home }
-                            )
-                        }
-                        BottomTab.Home -> {
-                            HomeScreen(
-                                profile = profile,
-                                recommendedBooks = viewModel.getFilteredBooks(),
-                                onNavigateToTab = { route ->
-                                    BottomTab.list.find { it.route == route }?.let { currentTab = it }
-                                },
-                                onNavigateToSchedule = { currentTab = BottomTab.Schedule },
-                                onNavigateToCourses = { showCourses = true },
-                                onToggleFavorite = { id, type, title, sub, fac ->
-                                    viewModel.toggleFavorite(id, type, title, sub, fac)
-                                },
-                                isFavorite = { id -> favorites.any { it.id == id } }
-                            )
-                        }
-                        BottomTab.Library -> {
-                            LibraryScreen(
-                                profile = profile,
-                                books = viewModel.getFilteredBooks(),
-                                projects = viewModel.getFilteredProjects(),
-                                bookSearchQuery = bookQuery,
-                                projectSearchQuery = projectQuery,
-                                onBookSearchChange = { q -> viewModel.setBookSearchQuery(q) },
-                                onProjectSearchChange = { q -> viewModel.setProjectSearchQuery(q) },
-                                onToggleFavorite = { id, type, title, sub, fac ->
-                                    viewModel.toggleFavorite(id, type, title, sub, fac)
-                                },
-                                isFavorite = { id -> favorites.any { it.id == id } }
-                            )
-                        }
-                        BottomTab.Wallet -> {
-                            WalletScreen(
-                                profile = profile,
-                                payments = payments,
-                                onProcessPayment = { title, cat, amt, method ->
-                                    viewModel.processPayment(title, cat, amt, method)
-                                }
-                            )
-                        }
-                        BottomTab.Favorites -> {
-                            FavoritesScreen(
-                                favorites = favorites,
-                                onToggleFavorite = { id, type, title, sub, fac ->
-                                    viewModel.toggleFavorite(id, type, title, sub, fac)
-                                }
-                            )
-                        }
-                        BottomTab.More -> {
-                            MoreScreen(
-                                onNavigateToTranslate = { showTranslate = true },
-                                onOpenGpaCalculator = { showGpaCalculator = true },
-                                onOpenLibraries = { showWorldLibraries = true },
-                                onOpenProfile = { showProfile = true },
-                                onLogout = { viewModel.logout() }
-                            )
-                        }
-                    }
-                }
+                // P1.2: NavHost handles bottom tabs + deep links; system back = Nav back
+                MainNavGraph(
+                    navController = navController,
+                    viewModel = viewModel,
+                    onOpenCourses = { showCourses = true },
+                    onOpenTranslate = { showTranslate = true },
+                    onOpenGpa = { showGpaCalculator = true },
+                    onOpenWorldLibraries = { showWorldLibraries = true },
+                    onOpenProfile = { showProfile = true },
+                    onOpenSchedule = { navController.navigateToTab(BottomTab.Schedule.route) }
+                )
             }
         }
 
@@ -319,7 +256,7 @@ fun JamaatyApp(
         // Deep Link Dialog & Tester
         if (showDeepLinkDialog) {
             DeepLinkDialog(
-                currentRoute = currentTab.route,
+                currentRoute = currentRoute,
                 currentLink = currentDeepLink,
                 onExecuteDeepLink = applyDeepLink,
                 onDismiss = { showDeepLinkDialog = false }
@@ -434,6 +371,6 @@ fun JamaatyApp(
                 )
             }
         }
+        }
     }
-}
 }

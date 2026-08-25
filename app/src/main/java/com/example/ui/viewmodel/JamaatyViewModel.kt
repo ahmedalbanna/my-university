@@ -17,6 +17,8 @@ import com.example.data.model.StudentProfile
 import com.example.data.model.VocabularyCard
 import android.media.RingtoneManager
 import android.net.Uri
+import com.example.data.auth.AuthRepository
+import com.example.data.auth.AuthResult
 import com.example.data.repository.JamaatyRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +36,9 @@ data class ChatMessage(
 
 class JamaatyViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = JamaatyRepository(AppDatabase.getDatabase(application).appDao())
+    private val appDao = AppDatabase.getDatabase(application).appDao()
+    private val repository = JamaatyRepository(appDao)
+    val authRepository = AuthRepository(appDao)
 
     // Onboarding State
     private val _onboardingCompleted = MutableStateFlow(false)
@@ -44,43 +48,113 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     private val _studentProfile = MutableStateFlow(StudentProfile())
     val studentProfile: StateFlow<StudentProfile> = _studentProfile.asStateFlow()
 
+    // P1.1 Auth state — backed by AuthRepository with persistence + Firebase fallback
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+    val authState: StateFlow<AuthRepository.AuthState> = authRepository.authState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthRepository.AuthState.Unauthenticated)
+
+    private val _authError = MutableStateFlow<String?>(null)
+    val authError: StateFlow<String?> = _authError.asStateFlow()
+
+    private val _isAuthLoading = MutableStateFlow(false)
+    val isAuthLoading: StateFlow<Boolean> = _isAuthLoading.asStateFlow()
 
     fun login(email: String, pass: String) {
-        _isLoggedIn.value = true
+        viewModelScope.launch {
+            _isAuthLoading.value = true
+            _authError.value = null
+            when (val result = authRepository.login(email, pass)) {
+                is AuthResult.Success -> {
+                    _isLoggedIn.value = true
+                    // Refresh profile (in case stored)
+                    _studentProfile.value = repository.getSavedProfile()
+                }
+                is AuthResult.Error -> {
+                    _authError.value = result.messageAr
+                    _isLoggedIn.value = false
+                }
+            }
+            _isAuthLoading.value = false
+        }
     }
 
     fun signUp(email: String, pass: String) {
-        // P0-5 fix: new user must complete ProfileSetup — use empty profile so JamaatyApp gate triggers
-        _studentProfile.value = StudentProfile(
-            name = "",
-            studentId = "",
-            university = StudentProfile.Default.university,
-            faculty = StudentProfile.Default.faculty,
-            major = StudentProfile.Default.major,
-            level = StudentProfile.Default.level,
-            semester = StudentProfile.Default.semester,
-            gpa = StudentProfile.Default.gpa,
-            balance = StudentProfile.Default.balance
-        )
-        _isLoggedIn.value = true
+        viewModelScope.launch {
+            _isAuthLoading.value = true
+            _authError.value = null
+            // P1.1: signUp validates confirm via repository; UI passes same pass as confirm for now
+            when (val result = authRepository.signUp(email, pass, pass)) {
+                is AuthResult.Success -> {
+                    // P0-5: new user must complete ProfileSetup — empty profile triggers gate
+                    _studentProfile.value = StudentProfile(
+                        name = "",
+                        studentId = "",
+                        university = StudentProfile.Default.university,
+                        faculty = StudentProfile.Default.faculty,
+                        major = StudentProfile.Default.major,
+                        level = StudentProfile.Default.level,
+                        semester = StudentProfile.Default.semester,
+                        gpa = StudentProfile.Default.gpa,
+                        balance = StudentProfile.Default.balance
+                    )
+                    _isLoggedIn.value = true
+                }
+                is AuthResult.Error -> {
+                    _authError.value = result.messageAr
+                    _isLoggedIn.value = false
+                }
+            }
+            _isAuthLoading.value = false
+        }
     }
 
+    // UI helper for signUp with confirmPassword
+    fun signUpWithConfirm(email: String, pass: String, confirm: String) {
+        viewModelScope.launch {
+            _isAuthLoading.value = true
+            _authError.value = null
+            when (val result = authRepository.signUp(email, pass, confirm)) {
+                is AuthResult.Success -> {
+                    _studentProfile.value = StudentProfile(
+                        name = "", studentId = "",
+                        university = StudentProfile.Default.university,
+                        faculty = StudentProfile.Default.faculty,
+                        major = StudentProfile.Default.major,
+                        level = StudentProfile.Default.level,
+                        semester = StudentProfile.Default.semester,
+                        gpa = StudentProfile.Default.gpa,
+                        balance = StudentProfile.Default.balance
+                    )
+                    _isLoggedIn.value = true
+                }
+                is AuthResult.Error -> {
+                    _authError.value = result.messageAr
+                    _isLoggedIn.value = false
+                }
+            }
+            _isAuthLoading.value = false
+        }
+    }
+
+    fun clearAuthError() { _authError.value = null }
+
     fun logout() {
-        _isLoggedIn.value = false
-        // Keep demo defaults for next login preview; real data cleared via repository on P1
-        _studentProfile.value = StudentProfile(
-            name = "",
-            studentId = "",
-            university = StudentProfile.Default.university,
-            faculty = StudentProfile.Default.faculty,
-            major = StudentProfile.Default.major,
-            level = StudentProfile.Default.level,
-            semester = StudentProfile.Default.semester,
-            gpa = StudentProfile.Default.gpa,
-            balance = StudentProfile.Default.balance
-        )
+        viewModelScope.launch {
+            authRepository.logout()
+            _isLoggedIn.value = false
+            // P1.1: clear user data transactionally via AuthRepository; reset profile to empty for next login gate
+            _studentProfile.value = StudentProfile(
+                name = "",
+                studentId = "",
+                university = StudentProfile.Default.university,
+                faculty = StudentProfile.Default.faculty,
+                major = StudentProfile.Default.major,
+                level = StudentProfile.Default.level,
+                semester = StudentProfile.Default.semester,
+                gpa = StudentProfile.Default.gpa,
+                balance = StudentProfile.Default.balance
+            )
+        }
     }
 
     // Level & Faculty Filters
@@ -94,6 +168,11 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     val selectedFaculty: StateFlow<String> = _selectedFaculty.asStateFlow()
 
     init {
+        // P1.1: restore auth session first — survives process death via Room
+        viewModelScope.launch {
+            authRepository.init()
+            _isLoggedIn.value = authRepository.isLoggedIn()
+        }
         // Load onboarding state & profile
         viewModelScope.launch {
             _onboardingCompleted.value = repository.isOnboardingCompleted()

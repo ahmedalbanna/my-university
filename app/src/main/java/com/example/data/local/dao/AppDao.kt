@@ -29,6 +29,9 @@ interface AppDao {
     @Query("DELETE FROM favorites WHERE id = :id")
     suspend fun deleteFavoriteById(id: String)
 
+    @Query("DELETE FROM favorites")
+    suspend fun deleteAllFavorites()
+
     // Payments
     @Query("SELECT * FROM payments ORDER BY id DESC")
     fun getAllPayments(): Flow<List<PaymentEntity>>
@@ -38,6 +41,9 @@ interface AppDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPayment(payment: PaymentEntity)
+
+    @Query("DELETE FROM payments")
+    suspend fun deleteAllPayments()
 
     // Preferences
     @Query("SELECT value FROM preferences WHERE `key` = :key")
@@ -49,6 +55,9 @@ interface AppDao {
     // Academic / GPA
     @Query("SELECT * FROM semesters")
     fun getAllSemesters(): Flow<List<SemesterEntity>>
+
+    @Query("SELECT * FROM semesters")
+    suspend fun getAllSemestersOnce(): List<SemesterEntity>
 
     @Query("SELECT * FROM courses WHERE semesterId = :semesterId")
     fun getCoursesForSemester(semesterId: String): Flow<List<CourseEntity>>

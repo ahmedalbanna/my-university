@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.local.dao.AppDao
 import com.example.data.local.entities.FavoriteEntity
 import com.example.data.local.entities.NotificationEntity
@@ -23,8 +25,8 @@ import com.example.data.local.entities.ScheduleEntity
         CourseEntity::class,
         ScheduleEntity::class
     ],
-    version = 3,
-    exportSchema = false
+    version = 4,
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appDao(): AppDao
@@ -33,13 +35,23 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        // P1.3: 3->4 no schema change — empty migration retains data (replaces destructive)
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // no-op — schema unchanged, just version bump for exportSchema
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "jamaaty_database"
-                ).fallbackToDestructiveMigration().build()
+                )
+                    .addMigrations(MIGRATION_3_4)
+                    .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
+                    .build()
                 INSTANCE = instance
                 instance
             }
