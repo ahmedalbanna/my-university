@@ -118,15 +118,20 @@ class JamaatyRepository(private val appDao: AppDao) {
         appDao.insertPayment(payment)
     }
 
+    suspend fun getPaymentsCount(): Int = appDao.getPaymentsCount()
+    suspend fun getNotificationsCount(): Int = appDao.getNotificationsCount()
+    suspend fun getSchedulesCount(): Int = appDao.getSchedulesCount()
+
+    // P0-5: Unified defaults via StudentProfile.Default — no duplication
     suspend fun getSavedProfile(): StudentProfile {
-        val name = appDao.getPreference("profile_name") ?: "أحمد عبدالله البنّاء"
-        val studentId = appDao.getPreference("profile_id") ?: "2024-YEM-88412"
-        val university = appDao.getPreference("profile_university") ?: "جامعة صنعاء"
-        val faculty = appDao.getPreference("profile_faculty") ?: "كلية الحاسوب وتكنولوجيا المعلومات"
-        val major = appDao.getPreference("profile_major") ?: "علوم الحاسوب والذكاء الاصطناعي"
-        val level = appDao.getPreference("profile_level")?.toIntOrNull() ?: 3
-        val gpa = appDao.getPreference("profile_gpa")?.toDoubleOrNull() ?: 3.84
-        val balance = appDao.getPreference("profile_balance")?.toDoubleOrNull() ?: 250000.00
+        val name = appDao.getPreference("profile_name") ?: StudentProfile.Default.name
+        val studentId = appDao.getPreference("profile_id") ?: StudentProfile.Default.studentId
+        val university = appDao.getPreference("profile_university") ?: StudentProfile.Default.university
+        val faculty = appDao.getPreference("profile_faculty") ?: StudentProfile.Default.faculty
+        val major = appDao.getPreference("profile_major") ?: StudentProfile.Default.major
+        val level = appDao.getPreference("profile_level")?.toIntOrNull() ?: StudentProfile.Default.level
+        val gpa = appDao.getPreference("profile_gpa")?.toDoubleOrNull() ?: StudentProfile.Default.gpa
+        val balance = appDao.getPreference("profile_balance")?.toDoubleOrNull() ?: StudentProfile.Default.balance
         return StudentProfile(
             name = name,
             studentId = studentId,

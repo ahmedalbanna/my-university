@@ -15,4 +15,11 @@
 .cxx
 local.properties
 .env
-debug.keystore
+# P0-4: debug.keystore is intentionally committed so fresh clones can build debug without generating.
+# Release keystore (my-upload-key.jks) remains ignored — never commit it.
+!/debug.keystore
+# Keep Gradle wrapper — required for CI. The .gradle cache dir above is still ignored.
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat

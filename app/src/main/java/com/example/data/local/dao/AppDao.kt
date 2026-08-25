@@ -33,6 +33,9 @@ interface AppDao {
     @Query("SELECT * FROM payments ORDER BY id DESC")
     fun getAllPayments(): Flow<List<PaymentEntity>>
 
+    @Query("SELECT COUNT(*) FROM payments")
+    suspend fun getPaymentsCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPayment(payment: PaymentEntity)
 
@@ -69,6 +72,9 @@ interface AppDao {
     @Query("SELECT * FROM schedules ORDER BY dayOfWeek, startTime")
     fun getAllSchedules(): Flow<List<ScheduleEntity>>
 
+    @Query("SELECT COUNT(*) FROM schedules")
+    suspend fun getSchedulesCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchedule(schedule: ScheduleEntity)
 
@@ -81,6 +87,9 @@ interface AppDao {
     // Notifications
     @Query("SELECT * FROM notifications ORDER BY timestamp DESC")
     fun getAllNotifications(): Flow<List<NotificationEntity>>
+
+    @Query("SELECT COUNT(*) FROM notifications")
+    suspend fun getNotificationsCount(): Int
 
     @Query("SELECT COUNT(*) FROM notifications WHERE isRead = 0")
     fun getUnreadNotificationsCount(): Flow<Int>

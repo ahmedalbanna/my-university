@@ -94,12 +94,13 @@ fun JamaatyApp(
     val unreadAiMessagesCount by viewModel.unreadAiMessagesCount.collectAsState()
     val chatMessages by viewModel.chatMessages.collectAsState()
 
-    // Deep Link Application Function
+    // Deep Link Application Function — P0-6: handles overlay flags and resolves all tabs (incl. Favorites)
     val applyDeepLink: (Uri) -> Unit = remember(viewModel) {
         { uri ->
             when (val result = DeepLinkParser.parse(uri)) {
                 is DeepLinkResult.NavigateTab -> {
-                    BottomTab.list.find { it.route == result.tabRoute }?.let { targetTab ->
+                    // Use `all` so jamaaty://favorites resolves even though not in bottom bar `list`
+                    BottomTab.all.find { it.route == result.tabRoute }?.let { targetTab ->
                         currentTab = targetTab
                     }
 
@@ -111,9 +112,13 @@ fun JamaatyApp(
                         result.searchQuery?.let { viewModel.setBookSearchQuery(it) }
                     }
 
-                    if (result.openChat) {
-                        showAiChatSheet = true
-                    }
+                    if (result.openChat) showAiChatSheet = true
+                    if (result.openTranslate) showTranslate = true
+                    if (result.openWorldLibraries) showWorldLibraries = true
+                    if (result.openGpa) showGpaCalculator = true
+                    if (result.openProfile) showProfile = true
+                    // openFavorites can also be tabRoute == "favorites"; handle both
+                    if (result.openFavorites) currentTab = BottomTab.Favorites
                 }
                 DeepLinkResult.Invalid -> { /* ignore invalid link */ }
             }
@@ -177,7 +182,8 @@ fun JamaatyApp(
                 onLoginSuccess = { email, pass -> viewModel.login(email, pass) },
                 onSignUpSuccess = { email, pass -> viewModel.signUp(email, pass) }
             )
-        } else if (profile.name.isEmpty()) {
+        } else if (profile.name.isBlank()) {
+            // P0-5: was isEmpty() dead code because StudentProfile defaults are non-empty; signUp now emits blank so gate works
             ProfileSetupScreen(
                 initialProfile = profile,
                 universities = viewModel.getUniversities(),

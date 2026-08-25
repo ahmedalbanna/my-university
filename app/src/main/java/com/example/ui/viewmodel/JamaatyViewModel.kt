@@ -52,14 +52,35 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun signUp(email: String, pass: String) {
-        // Here we could clear the profile for a new user if needed
-        _studentProfile.value = StudentProfile()
+        // P0-5 fix: new user must complete ProfileSetup — use empty profile so JamaatyApp gate triggers
+        _studentProfile.value = StudentProfile(
+            name = "",
+            studentId = "",
+            university = StudentProfile.Default.university,
+            faculty = StudentProfile.Default.faculty,
+            major = StudentProfile.Default.major,
+            level = StudentProfile.Default.level,
+            semester = StudentProfile.Default.semester,
+            gpa = StudentProfile.Default.gpa,
+            balance = StudentProfile.Default.balance
+        )
         _isLoggedIn.value = true
     }
 
     fun logout() {
         _isLoggedIn.value = false
-        _studentProfile.value = StudentProfile()
+        // Keep demo defaults for next login preview; real data cleared via repository on P1
+        _studentProfile.value = StudentProfile(
+            name = "",
+            studentId = "",
+            university = StudentProfile.Default.university,
+            faculty = StudentProfile.Default.faculty,
+            major = StudentProfile.Default.major,
+            level = StudentProfile.Default.level,
+            semester = StudentProfile.Default.semester,
+            gpa = StudentProfile.Default.gpa,
+            balance = StudentProfile.Default.balance
+        )
     }
 
     // Level & Faculty Filters
@@ -82,36 +103,37 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             _selectedFaculty.value = savedProfile.faculty
         }
 
-        // Seed initial sample payment if empty
+        // Seed initial sample payments — P0-2 fix: use COUNT(*) instead of stateIn(...).value which is always empty on cold start
         viewModelScope.launch {
-            repository.addPayment(
-                PaymentEntity(
-                    title = "رسوم الفصل الدراسي الأول 2026",
-                    category = "TUITION",
-                    amount = 3500.0,
-                    status = "PAID",
-                    date = "2026-01-10",
-                    referenceNo = "TXN-8841290",
-                    paymentMethod = "محفظة الكريمي / كاش"
+            if (repository.getPaymentsCount() == 0) {
+                repository.addPayment(
+                    PaymentEntity(
+                        title = "رسوم الفصل الدراسي الأول 2026",
+                        category = "TUITION",
+                        amount = 3500.0,
+                        status = "PAID",
+                        date = "2026-01-10",
+                        referenceNo = "TXN-8841290",
+                        paymentMethod = "محفظة الكريمي / كاش"
+                    )
                 )
-            )
-            repository.addPayment(
-                PaymentEntity(
-                    title = "اشتراك باقة الطلاب للاتصالات 50GB",
-                    category = "TELECOM",
-                    amount = 5000.0,
-                    status = "PAID",
-                    date = "2026-02-01",
-                    referenceNo = "TXN-9931002",
-                    paymentMethod = "محفظة جوالي"
+                repository.addPayment(
+                    PaymentEntity(
+                        title = "اشتراك باقة الطلاب للاتصالات 50GB",
+                        category = "TELECOM",
+                        amount = 5000.0,
+                        status = "PAID",
+                        date = "2026-02-01",
+                        referenceNo = "TXN-9931002",
+                        paymentMethod = "محفظة جوالي"
+                    )
                 )
-            )
+            }
         }
 
-        // Seed notifications if empty
+        // Seed notifications — P0-2 fix: use COUNT(*)
         viewModelScope.launch {
-            val current = repository.notifications.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList()).value
-            if (current.isEmpty()) {
+            if (repository.getNotificationsCount() == 0) {
                 repository.addNotification(
                     NotificationEntity(
                         id = "notif_1",
@@ -142,10 +164,9 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             }
         }
 
-        // Seed initial schedule if empty
+        // Seed initial schedule — P0-2 fix: use COUNT(*)
         viewModelScope.launch {
-            val current = repository.schedules.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList()).value
-            if (current.isEmpty()) {
+            if (repository.getSchedulesCount() == 0) {
                 val sampleSchedules = listOf(
                     ScheduleEntity(
                         dayOfWeek = "الأحد",
@@ -480,7 +501,7 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // Payment Actions
+    // Payment Actions — P0-3: persist balance atomically via repository
     fun processPayment(title: String, category: String, amount: Double, method: String) {
         viewModelScope.launch {
             val newPayment = PaymentEntity(
@@ -488,18 +509,23 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                 category = category,
                 amount = amount,
                 status = "PAID",
-                date = "2026-08-09",
+                // Use current date instead of hardcoded 2026-08-09
+                date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date()),
                 referenceNo = "TXN-${(1000000..9999999).random()}",
                 paymentMethod = method
             )
             repository.addPayment(newPayment)
 
-            // Update balance: deduct if using wallet balance, increase if recharging
+            // Update balance: deduct if using wallet balance, increase if recharging — then persist
             val current = _studentProfile.value
-            if (category == "RECHARGE" || title.contains("شحن")) {
-                _studentProfile.value = current.copy(balance = current.balance + amount)
-            } else if (method.contains("المحفظة")) {
-                _studentProfile.value = current.copy(balance = (current.balance - amount).coerceAtLeast(0.0))
+            val updated = when {
+                category == "RECHARGE" || title.contains("شحن") -> current.copy(balance = current.balance + amount)
+                method.contains("المحفظة") -> current.copy(balance = (current.balance - amount).coerceAtLeast(0.0))
+                else -> null
+            }
+            if (updated != null && updated.balance != current.balance) {
+                _studentProfile.value = updated
+                repository.saveStudentProfile(updated)
             }
         }
     }

@@ -55,6 +55,9 @@ sealed class BottomTab(
     companion object {
         val list: List<BottomTab>
             get() = listOf(Home, Library, Schedule, Wallet, More)
+        // P0-6: includes Favorites for deep-link resolution (not shown in bottom bar)
+        val all: List<BottomTab>
+            get() = listOf(Home, Library, Schedule, Wallet, More, Favorites)
     }
 }
 

@@ -11,7 +11,13 @@ sealed class DeepLinkResult {
         val searchQuery: String? = null,
         val difficulty: String? = null,
         val tag: String? = null,
-        val openChat: Boolean = false
+        val openChat: Boolean = false,
+        // P0-6: overlay flags — previously translate/more/favorites collapsed to invalid "translate_more"
+        val openTranslate: Boolean = false,
+        val openFavorites: Boolean = false,
+        val openWorldLibraries: Boolean = false,
+        val openGpa: Boolean = false,
+        val openProfile: Boolean = false
     ) : DeepLinkResult()
 
     object Invalid : DeepLinkResult()
@@ -43,6 +49,7 @@ object DeepLinkParser {
         val difficulty = uri.getQueryParameter("difficulty") ?: uri.getQueryParameter("diff")
         val tag = uri.getQueryParameter("tag")
 
+        // P0-6: all routes now map to valid BottomTab routes or overlay flags — no more "translate_more"/"exams" dead-ends
         return when (target.lowercase()) {
             "home", "" -> DeepLinkResult.NavigateTab("home", level = level)
             "library", "books", "projects" -> DeepLinkResult.NavigateTab(
@@ -52,14 +59,21 @@ object DeepLinkParser {
                 faculty = faculty,
                 searchQuery = searchQuery
             )
+            // Exams feature removed (commit 949e7f3) — route now lands on library with search passthrough
             "exams", "quiz", "questions" -> DeepLinkResult.NavigateTab(
-                tabRoute = "exams",
+                tabRoute = "library",
                 searchQuery = searchQuery,
                 difficulty = difficulty,
                 tag = tag
             )
             "wallet", "payments", "balance" -> DeepLinkResult.NavigateTab("wallet")
-            "translate", "more", "favorites" -> DeepLinkResult.NavigateTab("translate_more")
+            "schedule", "timetable", "lectures" -> DeepLinkResult.NavigateTab("schedule")
+            "translate" -> DeepLinkResult.NavigateTab("more", openTranslate = true)
+            "favorites", "bookmarks" -> DeepLinkResult.NavigateTab("favorites", openFavorites = true)
+            "worldlibraries", "world_libraries", "world-libraries", "libraries" -> DeepLinkResult.NavigateTab("more", openWorldLibraries = true)
+            "gpa", "calculator", "grades" -> DeepLinkResult.NavigateTab("more", openGpa = true)
+            "profile", "me", "student" -> DeepLinkResult.NavigateTab("home", openProfile = true)
+            "more" -> DeepLinkResult.NavigateTab("more")
             "chat", "ai", "assistant" -> DeepLinkResult.NavigateTab("home", openChat = true)
             else -> DeepLinkResult.NavigateTab("home", level = level)
         }

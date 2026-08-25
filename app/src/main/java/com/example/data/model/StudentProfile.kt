@@ -13,14 +13,31 @@ package com.example.data.model
  * @property gpa Current Grade Point Average.
  * @property balance Financial balance in the student's wallet.
  */
+/**
+ * Single source of truth for defaults — P0-5 fix.
+ * Previously defaults differed between this file (Saudi university, 2,450 balance)
+ * and JamaatyRepository.getSavedProfile() (Sana'a, 250,000). Now unified to Yemeni context.
+ */
 data class StudentProfile(
-    val name: String = "أحمد محمد العباسي",
-    val studentId: String = "2024-CSC-88412",
-    val university: String = "جامعة الملك سعود",
-    val faculty: String = "كلية الحاسبات والمعلومات",
-    val major: String = "علوم الحاسب والذكاء الاصطناعي",
-    val level: Int = 3,
-    val semester: Int = 1,
-    val gpa: Double = 3.84,
-    val balance: Double = 2450.00
-)
+    val name: String = Default.name,
+    val studentId: String = Default.studentId,
+    val university: String = Default.university,
+    val faculty: String = Default.faculty,
+    val major: String = Default.major,
+    val level: Int = Default.level,
+    val semester: Int = Default.semester,
+    val gpa: Double = Default.gpa,
+    val balance: Double = Default.balance
+) {
+    companion object Default {
+        const val name = "أحمد عبدالله البنّاء"
+        const val studentId = "2024-YEM-88412"
+        const val university = "جامعة صنعاء"
+        const val faculty = "كلية الحاسوب وتكنولوجيا المعلومات"
+        const val major = "علوم الحاسوب والذكاء الاصطناعي"
+        const val level = 3
+        const val semester = 1
+        const val gpa = 3.84
+        const val balance = 250000.00
+    }
+}
