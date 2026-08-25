@@ -20,28 +20,29 @@
 
 ## Timeline At-a-Glance
 
-| Phase | Window | Theme | Exit Criteria |
-|-------|--------|-------|---------------|
-| **P0 — Hotfix** | Week 1-2 | Stop data-loss & build break | App installs, no duplicate seeds, no balance reset |
-| **P1 — Foundation** | Week 3-6 | Auth, DB, Navigation, Permissions | Real login, NavHost, stable DB, Play bundle passes |
-| **P2 — Core Hardening** | Week 7-12 | Make each tab trustworthy | Library/Wallet/GPA use real data, AI real |
-| **P3 — Quality** | Month 4-6 | Testing, perf, offline, analytics | 60% unit coverage, baseline profiles, offline library |
-| **P4 — Scale** | Month 6-12 | Modularize, multi-university, store | Feature modules, sync API, closed-track release |
+| Phase | Window | Theme | Exit Criteria | Status |
+|-------|--------|-------|---------------|--------|
+| **P0 — Hotfix** | Week 1-2 | Stop data-loss & build break | App installs, no duplicate seeds, no balance reset | ✅ **COMPLETED 2026-08-25** (`9bd969b`) |
+| **P1 — Foundation** | Week 3-6 | Auth, DB, Navigation, Permissions | Real login, NavHost, stable DB, Play bundle passes | ⬜ TODO |
+| **P2 — Core Hardening** | Week 7-12 | Make each tab trustworthy | Library/Wallet/GPA use real data, AI real | ⬜ TODO |
+| **P3 — Quality** | Month 4-6 | Testing, perf, offline, analytics | 60% unit coverage, baseline profiles, offline library | ⬜ TODO |
+| **P4 — Scale** | Month 6-12 | Modularize, multi-university, store | Feature modules, sync API, closed-track release | ⬜ TODO |
 
 ---
 
-## P0 — Hotfix (Week 1-2) — MUST before any release
+## P0 — Hotfix (Week 1-2) — MUST before any release ✅ COMPLETED 2026-08-25 (`9bd969b`)
 
-| # | Task | File | Done When |
-|---|------|------|-----------|
-| P0-1 | Add `INTERNET` + `POST_NOTIFICATIONS` + `ACCESS_NETWORK_STATE` | `app/src/main/AndroidManifest.xml:1` | `aapt dump permissions` shows them; Gemini call succeeds |
-| P0-2 | Fix seed duplication: replace `stateIn(...).value` with `first()` / `COUNT(*)` | `JamaatyViewModel.kt:86-189` + `AppDao.kt:33` add `getPaymentsCount()` | Cold start 10x inserts 0 duplicates |
-| P0-3 | Persist balance transactionally | `JamaatyViewModel.kt:498` `saveStudentProfile()` + `PreferenceEntity` txn | Kill app → balance retained |
-| P0-4 | Fix `debug.keystore` + `gradlew` not tracked | `.gitignore:18`, `git status` | Fresh clone `./gradlew assembleDebug` passes |
-| P0-5 | Unify `StudentProfile` defaults | `StudentProfile.kt:16` + `JamaatyRepository.kt:122` | Single source `DefaultProfile` object |
-| P0-6 | Patch deep-link invalid routes | `DeepLinkHandler.kt:62` | `jamaaty://translate` opens overlay, not dead-end |
+| # | Task | File | Done When | Status |
+|---|------|------|-----------|--------|
+| P0-1 | Add `INTERNET` + `POST_NOTIFICATIONS` + `ACCESS_NETWORK_STATE` | `app/src/main/AndroidManifest.xml:1` | `aapt dump permissions` shows them; Gemini call succeeds | ✅ Done |
+| P0-2 | Fix seed duplication: replace `stateIn(...).value` with `first()` / `COUNT(*)` | `JamaatyViewModel.kt:86-189` + `AppDao.kt:33` add `getPaymentsCount()` | Cold start 10x inserts 0 duplicates | ✅ Done |
+| P0-3 | Persist balance transactionally | `JamaatyViewModel.kt:498` `saveStudentProfile()` + `PreferenceEntity` txn | Kill app → balance retained | ✅ Done |
+| P0-4 | Fix `debug.keystore` + `gradlew` not tracked | `.gitignore:18`, `git status` | Fresh clone `./gradlew assembleDebug` passes | ✅ Done |
+| P0-5 | Unify `StudentProfile` defaults | `StudentProfile.kt:16` + `JamaatyRepository.kt:122` | Single source `DefaultProfile` object | ✅ Done |
+| P0-6 | Patch deep-link invalid routes | `DeepLinkHandler.kt:62` | `jamaaty://translate` opens overlay, not dead-end | ✅ Done |
 
-**Effort:** 1 eng × 2 weeks. **Risk if skipped:** Store rejection, ledger inconsistency.
+**Effort:** 1 eng × 2 weeks. **Risk if skipped:** Store rejection, ledger inconsistency.<br>
+**Verification:** `ANDROID_HOME=/opt/android-sdk ./gradlew :app:assembleDebug :app:testDebugUnitTest` → `BUILD SUCCESSFUL` (4m53s / 2m57s) on 2026-08-25.
 
 ## P1 — Foundation (Week 3-6)
 
@@ -111,10 +112,10 @@
 
 ## Milestones & Ownership
 
-| Milestone | Owner | Date | Gate |
-|-----------|-------|------|------|
-| M0 Hotfix merge | Android lead | W2 | No P0 open issues |
-| M1 Foundation demo | Android + Backend | W6 | Auth e2e + NavHost + DB migration test |
+| Milestone | Owner | Date | Gate | Status |
+|-----------|-------|------|------|--------|
+| M0 Hotfix merge | Android lead | W2 | No P0 open issues | ✅ Done 2026-08-25 |
+| M1 Foundation demo | Android + Backend | W6 | Auth e2e + NavHost + DB migration test | ⬜ |
 | M2 Core beta | Feature owners | W12 | Testers can download real PDF, pay mock, get Gemini answer |
 | M3 QA green | QA + Android | M6 | CI lint+test green, 60% cov, baseline profile |
 | M4 Store submission | Release mgr | M9 | Play pre-launch report 0 crashes |
@@ -125,12 +126,12 @@
 - **Payment gateway sandbox delay** → Ship Wallet as read-only ledger + `TODO` behind `PaymentGateway` interface.
 - **AGP 9.1 + SDK 36 preview instability** → Pin `agp 8.7.3` fallback branch.
 
-## Immediate Next Steps (This Week)
+## Immediate Next Steps
 
-1. Create branch `fix/p0-hotfix` — land P0-1..P0-6.
-2. Spike 1-day `Firebase Auth` vs `Supabase` decision.
-3. Add `NavHost` skeleton in `JamaatyApp.kt` (behind feature flag).
-4. Write 3 tests: `DeepLinkParserTest`, `GpaCalculationTest`, `AppDaoTest`.
+- [x] **P0 Hotfix branch `fix/p0-hotfix` — landed `9bd969b`**
+- [ ] Spike 1-day `Firebase Auth` vs `Supabase` decision (P1.1)
+- [ ] Add `NavHost` skeleton in `JamaatyApp.kt` (behind feature flag) (P1.2)
+- [ ] Write 3 tests: `DeepLinkParserTest`, `GpaCalculationTest`, `AppDaoTest` (P3)
 
 ---
 
