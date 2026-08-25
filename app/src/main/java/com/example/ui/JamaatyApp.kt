@@ -7,7 +7,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +34,7 @@ import com.example.ui.components.BottomTab
 import com.example.ui.components.DeepLinkDialog
 import com.example.ui.components.JamaatyBottomBar
 import com.example.ui.components.JamaatyTopBar
+import com.example.ui.components.OfflineBanner
 import com.example.ui.components.RequestNotificationPermissionIfNeeded
 import com.example.ui.navigation.DeepLinkParser
 import com.example.ui.navigation.DeepLinkResult
@@ -224,22 +227,26 @@ fun JamaatyApp(
                 .fillMaxSize()
                 .testTag("jamaaty_main_scaffold")
         ) { innerPadding ->
-            Box(
+            androidx.compose.foundation.layout.Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // P1.2: NavHost handles bottom tabs + deep links; system back = Nav back
-                MainNavGraph(
-                    navController = navController,
-                    viewModel = viewModel,
-                    onOpenCourses = { showCourses = true },
-                    onOpenTranslate = { showTranslate = true },
-                    onOpenGpa = { showGpaCalculator = true },
-                    onOpenWorldLibraries = { showWorldLibraries = true },
-                    onOpenProfile = { showProfile = true },
-                    onOpenSchedule = { navController.navigateToTab(BottomTab.Schedule.route) }
-                )
+                // P3-3: offline banner (visible when no internet via NetworkMonitor)
+                OfflineBanner()
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    // P1.2: NavHost handles bottom tabs + deep links; system back = Nav back
+                    MainNavGraph(
+                        navController = navController,
+                        viewModel = viewModel,
+                        onOpenCourses = { showCourses = true },
+                        onOpenTranslate = { showTranslate = true },
+                        onOpenGpa = { showGpaCalculator = true },
+                        onOpenWorldLibraries = { showWorldLibraries = true },
+                        onOpenProfile = { showProfile = true },
+                        onOpenSchedule = { navController.navigateToTab(BottomTab.Schedule.route) }
+                    )
+                }
             }
         }
 

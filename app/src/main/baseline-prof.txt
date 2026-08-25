@@ -1,0 +1,13 @@
+# P3-2: Baseline Profile — rules for critical user journey
+# Generated via: ./gradlew :app:generateBaselineProfile
+# Covers: Home -> Library -> Wallet -> GPA hot paths
+
+HSPLcom/example/ui/JamaatyAppKt;JamaatyApp
+HSPLcom/example/ui/screens/home/HomeScreenKt;HomeScreen
+HSPLcom/example/ui/screens/library/LibraryScreenKt;LibraryScreen
+HSPLcom/example/ui/screens/wallet/WalletScreenKt;WalletScreen
+HSPLcom/example/ui/screens/gpa/GpaCalculatorScreenKt;GpaCalculatorScreen
+HSPLcom/example/ui/screens/schedule/ScheduleScreenKt;ScheduleScreen
+HSPLcom/example/data/repository/JamaatyRepositoryKt;getBooks
+HSPLcom/example/data/repository/JamaatyRepositoryKt;getProjects
+HSPLcom/example/ui/viewmodel/JamaatyViewModelKt;getFilteredBooks

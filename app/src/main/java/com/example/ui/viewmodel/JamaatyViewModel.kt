@@ -23,6 +23,7 @@ import android.os.Environment
 import com.example.data.auth.AuthRepository
 import com.example.data.auth.AuthResult
 import com.example.data.repository.JamaatyRepository
+import com.example.utils.AnalyticsLogger
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -480,6 +481,7 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         if (name.isBlank() || year.isBlank()) return false
         viewModelScope.launch {
             repository.addSemester(SemesterEntity(name = name.trim(), academicYear = year.trim()))
+            AnalyticsLogger.logEvent("semester_added", mapOf("name" to name))
         }
         return true
     }
@@ -489,6 +491,7 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
         if (name.isBlank() || creditHours <= 0 || creditHours > 12 || grade < 0.0 || grade > 5.0) return false
         viewModelScope.launch {
             repository.addCourse(CourseEntity(semesterId = semesterId, name = name.trim(), creditHours = creditHours, grade = grade))
+            AnalyticsLogger.logGpaCalculated(grade, creditHours)
         }
         return true
     }
@@ -699,6 +702,7 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
             repository.addPayment(newPayment)
 
             if (newPayment.status == "PAID") {
+                AnalyticsLogger.logPaymentSuccess(amount, method)
                 val current = _studentProfile.value
                 val updated = when {
                     category == "RECHARGE" || title.contains("شحن") -> current.copy(balance = current.balance + amount)
@@ -709,6 +713,8 @@ class JamaatyViewModel(application: Application) : AndroidViewModel(application)
                     _studentProfile.value = updated
                     repository.saveStudentProfile(updated)
                 }
+            } else {
+                AnalyticsLogger.logEvent("payment_failed", mapOf("title" to title, "amount" to amount))
             }
         }
     }
